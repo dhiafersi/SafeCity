@@ -1,0 +1,96 @@
+services:
+  # ─────────────────────────────── PostgreSQL + PostGIS ───────────────────────
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: safecity-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: safecity_db
+      POSTGRES_USER: safecity_user
+      POSTGRES_PASSWORD: safecity_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U safecity_user -d safecity_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - safecity-net
+
+  # ─────────────────────────────── Keycloak ───────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.3
+    container_name: safecity-keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/safecity_db
+      KC_DB_USERNAME: safecity_user
+      KC_DB_PASSWORD: safecity_pass
+      KC_DB_SCHEMA: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_LOG_LEVEL: INFO
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/realms:/opt/keycloak/data/import
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - safecity-net
+
+  # ─────────────────────────────── Spring Boot Backend ────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: safecity-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/safecity_db
+      SPRING_DATASOURCE_USERNAME: safecity_user
+      SPRING_DATASOURCE_PASSWORD: safecity_pass
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/safecity
+      KEYCLOAK_BASE_URL: http://keycloak:8080
+      SERVER_PORT: 8081
+      HUGGING_FACE_TOKEN: ${HUGGING_FACE_TOKEN:-}
+      SAFECITY_AI_SIMULATION: ${SAFECITY_AI_SIMULATION:-false}
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - safecity-net
+
+  # ─────────────────────────────── Angular Frontend ───────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: safecity-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - safecity-net
+
+volumes:
+  postgres_data:
+
+networks:
+  safecity-net:
+    driver: bridge

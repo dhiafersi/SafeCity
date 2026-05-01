@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: safecity-backend
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/safecity_db}
+    username: ${SPRING_DATASOURCE_USERNAME:safecity_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:safecity_pass}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://localhost:8080/realms/safecity}
+          jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://localhost:8080/realms/safecity}/protocol/openid-connect/certs
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 15MB
+
+server:
+  port: ${SERVER_PORT:8081}
+
+# ─── Application-specific Config ─────────────────────────────────────────────
+safecity:
+  keycloak:
+    base-url: ${KEYCLOAK_BASE_URL:http://localhost:8080}
+    realm: safecity
+  ai:
+    simulation-enabled: ${SAFECITY_AI_SIMULATION:false}
+    hf-token: ${HUGGING_FACE_TOKEN:}
+    model: ${SAFECITY_AI_MODEL:openai/clip-vit-base-patch32}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.safecity: DEBUG
+    org.springframework.security: INFO

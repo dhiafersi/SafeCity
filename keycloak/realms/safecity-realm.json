@@ -1,0 +1,112 @@
+{
+  "realm": "safecity",
+  "enabled": true,
+  "displayName": "SafeCity Connect",
+  "sslRequired": "none",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "CITIZEN",
+        "description": "A citizen who can report incidents and view their own history and points",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "ADMIN",
+        "description": "An administrator who can manage incidents and view the analytics dashboard",
+        "composite": false,
+        "clientRole": false
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "safecity-angular",
+      "name": "SafeCity Angular App",
+      "description": "Public OIDC client for the Angular frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:80/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "http://localhost:80"
+      ],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "protocolMappers": [
+        {
+          "name": "realm-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "safecity-backend",
+      "name": "SafeCity Spring Boot Backend",
+      "description": "Confidential client for backend-to-backend calls",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "secret": "backend-secret-change-in-prod",
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "citizen1",
+      "email": "citizen1@safecity.local",
+      "firstName": "Alice",
+      "lastName": "Martin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "citizen123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["CITIZEN"]
+    },
+    {
+      "username": "admin1",
+      "email": "admin1@safecity.local",
+      "firstName": "Bob",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ADMIN"]
+    }
+  ]
+}
