@@ -14,7 +14,6 @@ RUN mvn -B -DskipTests package
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
-RUN addgroup -S safecity && adduser -S safecity -G safecity
-USER safecity
+RUN mkdir -p /app/uploads && chmod -R 777 /app/uploads
 EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "app.jar"]

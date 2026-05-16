@@ -32,6 +32,10 @@ export interface IncidentResponse {
   resolvedAt?: string;
 }
 
+export interface DescriptionResponse {
+  description: string;
+}
+
 export interface PageResponse<T> {
   content: T[];
   totalElements: number;
@@ -62,6 +66,10 @@ export class IncidentService {
     const form = new FormData();
     form.append('image', photo);
     return this.http.post<any>(`${environment.apiBaseUrl}/api/ai/analyze`, form);
+  }
+
+  generateDescription(category: string, confidence?: number): Observable<DescriptionResponse> {
+    return this.http.post<DescriptionResponse>(`${environment.apiBaseUrl}/api/ai/describe`, { category, confidence });
   }
 
   getAll(page = 0, size = 20): Observable<PageResponse<IncidentResponse>> {

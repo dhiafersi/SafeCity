@@ -38,7 +38,8 @@ public class IncidentController {
     ) {
         String keycloakId = jwt.getSubject();
         String username   = jwt.getClaimAsString("preferred_username");
-        IncidentResponse response = incidentService.createIncident(request, photo, keycloakId, username);
+        String email      = jwt.getClaimAsString("email");
+        IncidentResponse response = incidentService.createIncident(request, photo, keycloakId, username, email);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

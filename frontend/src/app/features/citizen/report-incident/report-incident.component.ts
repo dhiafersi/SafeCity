@@ -52,8 +52,8 @@ import { IncidentService } from '../../../core/services/incident.service';
               <span *ngIf="locationLoading">⏳ Detecting location...</span>
             </button>
             <div *ngIf="locationCaptured" class="location-display">
-              ✅ Lat: {{ form.value.latitude | number:'1.4-6' }},
-                 Lng: {{ form.value.longitude | number:'1.4-6' }}
+              ✅ Lat: {{ form.value.latitude | number:'1.6-6' }},
+                 Lng: {{ form.value.longitude | number:'1.6-6' }}
             </div>
             <div class="location-manual">
               <input formControlName="latitude" type="number" placeholder="Latitude"
@@ -229,8 +229,8 @@ export class ReportIncidentComponent implements OnInit {
     navigator.geolocation.getCurrentPosition(
       pos => {
         this.form.patchValue({
-          latitude:  pos.coords.latitude,
-          longitude: pos.coords.longitude,
+          latitude:  Number(pos.coords.latitude.toFixed(6)),
+          longitude: Number(pos.coords.longitude.toFixed(6)),
         });
         this.locationLoading = false;
         this.locationCaptured = true;
@@ -270,30 +270,41 @@ export class ReportIncidentComponent implements OnInit {
         const titleCtrl = this.form.get('title');
         const descCtrl = this.form.get('description');
         const catCtrl = this.form.get('category');
-        
-        // Find clean label
-        let categoryLabel = res.category;
-        const matchingCat = this.categories.find(c => c.value === res.category);
-        if (matchingCat) {
-          categoryLabel = matchingCat.label.replace(/[^a-zA-Z\s]/g, '').trim(); 
-        }
 
-        // Auto-fill if empty
+        const normalizedCategory = res.category?.toString().trim().toUpperCase().replace(/\s+/g, '_') || 'OTHER';
+        const validCategory = this.categories.some(c => c.value === normalizedCategory)
+          ? normalizedCategory
+          : 'OTHER';
+
+        const matchingCat = this.categories.find(c => c.value === validCategory);
+        const categoryLabel = matchingCat
+          ? matchingCat.label.replace(/[^a-zA-Z\s]/g, '').trim()
+          : 'Other issue';
+
+        // Auto-fill category, title and description when the image is uploaded.
+        if (!catCtrl?.value) {
+          catCtrl?.setValue(validCategory);
+        }
         if (!titleCtrl?.value) {
           titleCtrl?.setValue(`Reported ${categoryLabel}`);
         }
-        if (!descCtrl?.value) {
-          const conf = Math.round((res.confidence ?? 0) * 100);
-          descCtrl?.setValue(`AI Auto-Detection: ${categoryLabel} with ${conf}% confidence.`);
-        }
-        if (!catCtrl?.value) {
-          catCtrl?.setValue(res.category);
-        }
 
-        this.aiResult = { aiCategory: res.category, aiConfidence: res.confidence };
+        this.aiResult = { aiCategory: validCategory, aiConfidence: res.confidence };
+
+        if (!descCtrl?.value) {
+          this.incidentService.generateDescription(validCategory, res.confidence).subscribe({
+            next: descRes => descCtrl?.setValue(descRes.description),
+            error: err => {
+              console.warn('AI description generation failed:', err);
+              const conf = Math.round((res.confidence ?? 0) * 100);
+              descCtrl?.setValue(`AI Auto-Detection: ${categoryLabel} with ${conf}% confidence.`);
+            }
+          });
+        }
       },
       error: err => {
         this.aiLoading = false;
+        this.errorMsg = 'AI image analysis failed. Please try again or enter the category manually.';
         console.error('AI analysis failed:', err);
       }
     });

@@ -1,5 +1,5 @@
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { AfterViewInit, Component, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import {
   Map as LeafletMap,
   LayerGroup,
@@ -13,15 +13,17 @@ import { IncidentResponse, PageResponse } from '../../../core/services/incident.
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { GamificationService, CitizenPointsResponse } from '../../../core/services/gamification.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-public-map',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DatePipe],
   template: `
     <div class="landing-shell">
       <!-- Hero overlay content -->
-      <header class="hero">
+      <header class="hero" *ngIf="!(isLoggedIn$ | async)">
         <div class="hero-copy">
           <h1>See your city in real time.</h1>
           <p>Explore live incident reports and urban issues directly on the map — no login required.</p>
@@ -29,7 +31,7 @@ import { GamificationService, CitizenPointsResponse } from '../../../core/servic
         <div class="hero-pill">
           <div class="stat">
             <span class="label">Live incidents</span>
-            <span class="value">{{ totalIncidents }}</span>
+            <span class="value">{{ filteredIncidents.length }}</span>
           </div>
           <div class="divider"></div>
           <div class="stat">
@@ -55,8 +57,8 @@ import { GamificationService, CitizenPointsResponse } from '../../../core/servic
 
       <!-- Leaderboard (right side) -->
       <aside class="leaderboard-card">
-        <h2>Top Contributors – Bizerte</h2>
-        <p class="subtitle">Based on validated incident reports.</p>
+        <h2>Top Contributors</h2>
+        <p class="subtitle">Viewing {{ currentGovernorate }} • {{ filteredIncidents.length }} incidents shown</p>
         <div *ngIf="leaderboardLoading" class="lb-loading">Loading leaderboard…</div>
         <ul *ngIf="!leaderboardLoading && leaderboard.length > 0" class="lb-list">
           <li *ngFor="let item of leaderboard; index as i">
@@ -72,8 +74,29 @@ import { GamificationService, CitizenPointsResponse } from '../../../core/servic
         </div>
       </aside>
 
+      <!-- Incident Details Panel (left side) -->
+      <aside *ngIf="selectedIncident" class="incident-details-card">
+        <button class="close-btn" (click)="selectedIncident = null">&times;</button>
+        <h2>{{ selectedIncident.title }}</h2>
+        <div class="incident-meta">
+          <span class="status" [class]="'status-' + selectedIncident.status.toLowerCase()">{{ selectedIncident.status }}</span>
+          <span class="category">{{ selectedIncident.category || 'Uncategorized' }}</span>
+          <span class="date">{{ selectedIncident.createdAt | date:'short' }}</span>
+        </div>
+        <p class="description" *ngIf="selectedIncident.description">{{ selectedIncident.description }}</p>
+        <div class="address" *ngIf="selectedIncident.address">
+          <strong>Address:</strong> {{ selectedIncident.address }}
+        </div>
+        <div class="reporter">
+          <strong>Reported by:</strong> {{ selectedIncident.reporterUsername }}
+        </div>
+        <div *ngIf="selectedIncident.photoPath" class="photo-container">
+          <img [src]="getPhotoUrl(selectedIncident.photoPath)" [alt]="selectedIncident.title" class="incident-photo" />
+        </div>
+      </aside>
+
       <!-- Map fills the viewport -->
-      <div class="map-shell">
+      <div class="map-shell" [class.with-panel]="selectedIncident">
         <div #mapEl id="landing-leaflet-map"></div>
       </div>
     </div>
@@ -92,6 +115,10 @@ import { GamificationService, CitizenPointsResponse } from '../../../core/servic
       position:absolute;
       inset:0;
       z-index:0;
+      transition: left 0.3s ease;
+    }
+    .map-shell.with-panel {
+      left: 320px;
     }
     #landing-leaflet-map {
       position:absolute;
@@ -256,6 +283,86 @@ import { GamificationService, CitizenPointsResponse } from '../../../core/servic
       color:#cfd8dc;
     }
 
+    .incident-details-card {
+      position:absolute;
+      left:1.5rem;
+      top:1.5rem;
+      width:300px;
+      max-height:calc(100vh - 120px);
+      padding:1rem 1.1rem;
+      border-radius:14px;
+      background:radial-gradient(circle at 0 0, rgba(79,195,247,.32), rgba(10,10,20,.92));
+      border:1px solid rgba(79,195,247,.55);
+      box-shadow:0 20px 50px rgba(0,0,0,.75);
+      font-size:.85rem;
+      z-index:1000;
+      overflow-y:auto;
+    }
+    .incident-details-card .close-btn {
+      position:absolute;
+      top:0.5rem;
+      right:0.5rem;
+      background:none;
+      border:none;
+      color:#fff;
+      font-size:1.5rem;
+      cursor:pointer;
+      padding:0;
+      width:1.5rem;
+      height:1.5rem;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .incident-details-card h2 {
+      margin:0 0 0.5rem 0;
+      font-size:1.1rem;
+      color:#4fc3f7;
+    }
+    .incident-meta {
+      display:flex;
+      flex-wrap:wrap;
+      gap:0.5rem;
+      margin-bottom:0.75rem;
+    }
+    .status {
+      padding:0.2rem 0.5rem;
+      border-radius:4px;
+      font-size:0.75rem;
+      font-weight:600;
+      text-transform:uppercase;
+    }
+    .status-pending { background:#ffca28; color:#000; }
+    .status-validated { background:#81c784; color:#000; }
+    .status-resolved { background:#4fc3f7; color:#000; }
+    .category {
+      color:#ffd54f;
+      font-weight:500;
+    }
+    .date {
+      color:#b0bec5;
+      font-size:0.8rem;
+    }
+    .description {
+      margin:0 0 0.75rem 0;
+      line-height:1.4;
+      color:#e0e0e0;
+    }
+    .address, .reporter {
+      margin:0 0 0.5rem 0;
+      font-size:0.85rem;
+      color:#cfcfcf;
+    }
+    .photo-container {
+      margin-top:1rem;
+    }
+    .incident-photo {
+      width:100%;
+      height:auto;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.2);
+    }
+
     @media (max-width: 768px) {
       .hero-copy {
         max-width: 90vw;
@@ -281,6 +388,17 @@ import { GamificationService, CitizenPointsResponse } from '../../../core/servic
         margin:0.5rem auto 0;
         width:90vw;
       }
+      .incident-details-card {
+        left:50%;
+        transform:translateX(-50%);
+        top:1rem;
+        width:90vw;
+        max-height:50vh;
+      }
+      .map-shell.with-panel {
+        left: 0;
+        top: 55vh;
+      }
     }
   `]
 })
@@ -291,17 +409,64 @@ export class PublicMapComponent implements AfterViewInit {
   private markersLayer!: LayerGroup;
 
   totalIncidents = 0;
-  pendingCount = 0;
-  resolvedCount = 0;
 
   leaderboard: CitizenPointsResponse[] = [];
   leaderboardLoading = true;
 
-  constructor(private http: HttpClient, private gamificationService: GamificationService) {}
+  currentGovernorate = 'Tunisia';
+
+  selectedIncident: IncidentResponse | null = null;
+  allIncidents: IncidentResponse[] = [];
+  filteredIncidents: IncidentResponse[] = [];
+
+  get pendingCount(): number {
+    return this.filteredIncidents.filter(i => i.status === 'PENDING').length;
+  }
+
+  get resolvedCount(): number {
+    return this.filteredIncidents.filter(i => i.status === 'RESOLVED').length;
+  }
+
+  // Tunisian governorates with approximate boundaries
+  private tunisianGovernorates = [
+    { name: 'Tunis', lat: 36.8065, lng: 10.1815, bounds: [[36.7, 10.0], [37.0, 10.4]] },
+    { name: 'Ariana', lat: 36.8625, lng: 10.1956, bounds: [[36.8, 10.1], [36.9, 10.3]] },
+    { name: 'Ben Arous', lat: 36.7531, lng: 10.2189, bounds: [[36.6, 10.0], [36.8, 10.4]] },
+    { name: 'Manouba', lat: 36.8080, lng: 10.0972, bounds: [[36.7, 9.9], [36.9, 10.2]] },
+    { name: 'Nabeul', lat: 36.4513, lng: 10.7357, bounds: [[36.3, 10.4], [36.6, 10.9]] },
+    { name: 'Zaghouan', lat: 36.4029, lng: 10.1429, bounds: [[36.2, 9.8], [36.6, 10.4]] },
+    { name: 'Bizerte', lat: 37.2744, lng: 9.8739, bounds: [[37.0, 9.5], [37.4, 10.2]] },
+    { name: 'Béja', lat: 36.7256, lng: 9.1817, bounds: [[36.4, 8.8], [36.9, 9.5]] },
+    { name: 'Jendouba', lat: 36.5011, lng: 8.7803, bounds: [[36.2, 8.3], [36.7, 9.1]] },
+    { name: 'Kef', lat: 36.1742, lng: 8.7142, bounds: [[35.8, 8.2], [36.5, 9.0]] },
+    { name: 'Siliana', lat: 36.0843, lng: 9.3708, bounds: [[35.8, 9.0], [36.4, 9.7]] },
+    { name: 'Kairouan', lat: 35.6781, lng: 10.0963, bounds: [[35.3, 9.5], [36.0, 10.5]] },
+    { name: 'Kasserine', lat: 35.1676, lng: 8.8365, bounds: [[34.8, 8.2], [35.6, 9.2]] },
+    { name: 'Sidi Bouzid', lat: 35.0381, lng: 9.4847, bounds: [[34.6, 9.0], [35.4, 9.9]] },
+    { name: 'Sousse', lat: 35.8256, lng: 10.6367, bounds: [[35.6, 10.3], [36.1, 10.9]] },
+    { name: 'Monastir', lat: 35.7833, lng: 10.8333, bounds: [[35.5, 10.6], [35.9, 11.0]] },
+    { name: 'Mahdia', lat: 35.5047, lng: 11.0622, bounds: [[35.2, 10.7], [35.7, 11.3]] },
+    { name: 'Sfax', lat: 34.7406, lng: 10.7603, bounds: [[34.4, 10.4], [35.1, 11.1]] },
+    { name: 'Gabès', lat: 33.8815, lng: 10.0982, bounds: [[33.5, 9.5], [34.3, 10.5]] },
+    { name: 'Medenine', lat: 33.3549, lng: 10.5055, bounds: [[32.8, 10.0], [33.8, 11.0]] },
+    { name: 'Tataouine', lat: 32.9297, lng: 10.4518, bounds: [[30.8, 10.0], [33.2, 10.9]] },
+    { name: 'Gafsa', lat: 34.4250, lng: 8.7842, bounds: [[34.0, 8.2], [34.8, 9.2]] },
+    { name: 'Tozeur', lat: 33.9197, lng: 8.1339, bounds: [[33.5, 7.5], [34.3, 8.8]] },
+    { name: 'Kebili', lat: 33.7050, lng: 8.9690, bounds: [[33.0, 8.5], [34.0, 9.5]] }
+  ];
+
+  get isLoggedIn$(): Observable<boolean> {
+    return this.authService.loginState$;
+  }
+
+  constructor(private http: HttpClient, private gamificationService: GamificationService, private authService: AuthService, private cdr: ChangeDetectorRef) {}
 
   ngAfterViewInit(): void {
     this.initMap();
     this.loadData();
+
+    // Initial governorate detection after map is ready
+    setTimeout(() => this.updateGovernorateData(), 1000);
   }
 
   private initMap(): void {
@@ -318,27 +483,33 @@ export class PublicMapComponent implements AfterViewInit {
     }).addTo(this.map);
 
     this.markersLayer = layerGroup().addTo(this.map);
+
+    // Add event listeners for map movement and zoom
+    this.map.on('moveend', () => {
+      console.log('Map moved');
+      this.updateGovernorateData();
+    });
+    this.map.on('zoomend', () => {
+      console.log('Map zoomed');
+      this.updateGovernorateData();
+    });
   }
 
   private loadData(): void {
     const params = new HttpParams()
       .set('page', 0)
-      .set('size', 200)
+      .set('size', 1000) // Load more incidents for filtering
       .set('sort', 'createdAt,desc');
 
     this.http.get<PageResponse<IncidentResponse>>(
       `${environment.apiBaseUrl}/api/public/incidents`,
       { params }
     ).subscribe(page => {
+      this.allIncidents = page.content;
       this.totalIncidents = page.totalElements;
 
-      const pending = page.content.filter(i => i.status === 'PENDING');
-      const resolved = page.content.filter(i => i.status === 'RESOLVED');
-
-      this.pendingCount = pending.length;
-      this.resolvedCount = resolved.length;
-
-      this.renderMarkers(page.content);
+      // Update governorate data based on current map view
+      this.updateGovernorateData();
     });
 
     this.gamificationService.getPublicLeaderboard().subscribe({
@@ -351,6 +522,91 @@ export class PublicMapComponent implements AfterViewInit {
         this.leaderboardLoading = false;
       }
     });
+  }
+
+  private updateGovernorateData(): void {
+    if (!this.map) {
+      console.log('Map not ready');
+      return;
+    }
+
+    if (this.allIncidents.length === 0) {
+      console.log('No incidents loaded yet');
+      return;
+    }
+
+    const bounds = this.map.getBounds();
+    const center = this.map.getCenter();
+    const zoom = this.map.getZoom();
+    console.log(`Map bounds: ${bounds.getSouthWest().lat}, ${bounds.getSouthWest().lng} to ${bounds.getNorthEast().lat}, ${bounds.getNorthEast().lng}`);
+    console.log(`Map center: ${center.lat}, ${center.lng}, zoom: ${zoom}`);
+
+    // Filter incidents within current map bounds
+    this.filteredIncidents = this.allIncidents.filter(incident => {
+      return bounds.contains([incident.latitude, incident.longitude]);
+    });
+
+    console.log(`Filtered ${this.filteredIncidents.length} incidents within map bounds`);
+
+    // Update marker rendering
+    this.renderMarkers(this.filteredIncidents);
+
+    // Update governorate name based on zoom level
+    this.updateGovernorateName(zoom);
+
+    // Trigger change detection
+    this.cdr.detectChanges();
+  }
+
+  private updateGovernorateName(zoom: number): void {
+    if (zoom < 9) {
+      this.currentGovernorate = 'Tunisia';
+    } else if (zoom < 11) {
+      this.currentGovernorate = 'Tunis Region';
+    } else {
+      // Try to detect specific governorate
+      const center = this.map?.getCenter();
+      if (center) {
+        const governorate = this.detectGovernorate(center.lat, center.lng);
+        this.currentGovernorate = governorate;
+      }
+    }
+  }
+
+  private detectGovernorate(lat: number, lng: number): string {
+    console.log(`Detecting governorate for coordinates: ${lat}, ${lng}`);
+
+    // Find the governorate that contains the current coordinates
+    for (const gov of this.tunisianGovernorates) {
+      const [[minLat, minLng], [maxLat, maxLng]] = gov.bounds;
+      console.log(`Checking ${gov.name}: bounds [${minLat}, ${minLng}] to [${maxLat}, ${maxLng}]`);
+      if (lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng) {
+        console.log(`Found governorate: ${gov.name}`);
+        return gov.name;
+      }
+    }
+
+    console.log('No governorate found, using fallback');
+    // If no specific governorate, check zoom level
+    const zoom = this.map?.getZoom() || 8;
+    if (zoom < 9) {
+      return 'Tunisia'; // Country level
+    } else if (zoom < 11) {
+      return 'Tunis Region'; // Regional level
+    } else {
+      return 'Tunis'; // Default to capital
+    }
+  }
+
+  private isIncidentInGovernorate(incident: IncidentResponse, governorate: string): boolean {
+    if (governorate === 'Tunisia') return true; // Show all incidents
+
+    const gov = this.tunisianGovernorates.find(g => g.name === governorate);
+    if (!gov) return true;
+
+    const [[minLat, minLng], [maxLat, maxLng]] = gov.bounds;
+    return incident.latitude >= minLat && incident.latitude <= maxLat &&
+           incident.longitude >= minLng && incident.longitude <= maxLng;
   }
 
   private renderMarkers(incidents: IncidentResponse[]): void {
@@ -379,6 +635,10 @@ export class PublicMapComponent implements AfterViewInit {
 
       const m = marker([inc.latitude, inc.longitude], { icon });
       m.bindTooltip(`${inc.title}`, { direction: 'top' });
+      m.on('click', () => {
+        this.selectedIncident = inc;
+        this.cdr.detectChanges();
+      });
       this.markersLayer.addLayer(m);
     });
   }
@@ -394,6 +654,15 @@ export class PublicMapComponent implements AfterViewInit {
       case 'FLOODING':          return '🌊';
       default:                  return '❗';
     }
+  }
+
+  getPhotoUrl(photoPath: string): string {
+    if (photoPath.startsWith('http')) {
+      return photoPath;
+    }
+    // Extract filename from path like "uploads/incidents/uuid_filename.jpg"
+    const filename = photoPath.split('/').pop();
+    return `${environment.apiBaseUrl}/api/uploads/incidents/${filename}`;
   }
 }
 

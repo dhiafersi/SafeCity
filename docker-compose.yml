@@ -66,13 +66,43 @@ services:
       SERVER_PORT: 8081
       HUGGING_FACE_TOKEN: ${HUGGING_FACE_TOKEN:-}
       SAFECITY_AI_SIMULATION: ${SAFECITY_AI_SIMULATION:-false}
+      SAFECITY_AI_SERVICE_URL: ${SAFECITY_AI_SERVICE_URL:-http://ai-service:8000}
+      EMAIL_API_PROVIDER: ${EMAIL_API_PROVIDER:-smtp}
+      EMAIL_API_KEY: ${EMAIL_API_KEY:-}
+      EMAIL_API_URL: ${EMAIL_API_URL:-https://api.mailgun.net/v3}
+      EMAIL_DOMAIN: ${EMAIL_DOMAIN:-your-mailgun-domain}
+      EMAIL_FROM: ${EMAIL_FROM:-no-reply@safecity-connect.local}
+      SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-ab75a7001@smtp-brevo.com}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-kjhXYmnxv03HAc6Z}
+      SMTP_AUTH: ${SMTP_AUTH:-true}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
     ports:
       - "8081:8081"
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - safecity-net
+
+  # ─────────────────────────────── Python AI Microservice ─────────────────────
+  ai-service:
+    build:
+      context: ./backend/ai-service
+      dockerfile: Dockerfile
+    container_name: safecity-ai-service
+    environment:
+      AI_MODEL_PATH: ${AI_MODEL_PATH:-/app/runs/best.pt}
+      AI_MODEL_CONFIDENCE: ${AI_MODEL_CONFIDENCE:-0.25}
+    ports:
+      - "8000:8000"
+    networks:
+      - safecity-net
+    volumes:
+      - ./backend/ai-service:/app
 
   # ─────────────────────────────── Angular Frontend ───────────────────────────
   frontend:
@@ -90,6 +120,7 @@ services:
 
 volumes:
   postgres_data:
+  safecity_uploads:
 
 networks:
   safecity-net:

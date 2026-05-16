@@ -25,7 +25,7 @@ import { IncidentService, IncidentResponse, PageResponse } from '../../../core/s
             <h3>{{ inc.title }}</h3>
             <p class="description">{{ inc.description || '—' }}</p>
             <div class="meta">
-              <span>📍 {{ inc.latitude | number:'1.4-4' }}, {{ inc.longitude | number:'1.4-4' }}</span>
+              <span>📍 {{ inc.latitude | number:'1.4-6' }}, {{ inc.longitude | number:'1.4-6' }}</span>
               <span>🕐 {{ inc.createdAt | date:'short' }}</span>
             </div>
             <div class="ai-info" *ngIf="inc.aiCategory">

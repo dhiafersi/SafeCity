@@ -49,6 +49,9 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // Public uploaded photos - must come before authenticated endpoints
+                .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/uploads/**").permitAll()
                 // Public map + leaderboard data for landing page
                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
 

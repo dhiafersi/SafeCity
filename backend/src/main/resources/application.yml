@@ -15,7 +15,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        "format_sql": true
 
   security:
     oauth2:
@@ -30,6 +30,26 @@ spring:
       max-file-size: 10MB
       max-request-size: 15MB
 
+  email-api:
+    provider: ${EMAIL_API_PROVIDER:${SPRING_EMAIL_API_PROVIDER:mailgun}}
+    api-key: ${EMAIL_API_KEY:${SPRING_EMAIL_API_API_KEY:}}
+    api-url: ${EMAIL_API_URL:${SPRING_EMAIL_API_API_URL:https://api.mailgun.net/v3}}
+    from-email: ${EMAIL_FROM:${SPRING_EMAIL_API_FROM:no-reply@safecity-connect.local}}
+    domain: ${EMAIL_DOMAIN:${SPRING_EMAIL_API_DOMAIN:}}
+
+  mail:
+    host: ${SMTP_HOST:smtp-relay.brevo.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:true}
+          starttls:
+            enable: ${SMTP_STARTTLS:true}
+            required: ${SMTP_STARTTLS:true}
+
 server:
   port: ${SERVER_PORT:8081}
 
@@ -40,7 +60,7 @@ safecity:
     realm: safecity
   ai:
     simulation-enabled: ${SAFECITY_AI_SIMULATION:false}
-    hf-token: ${HUGGING_FACE_TOKEN:}
+    service-url: ${SAFECITY_AI_SERVICE_URL:http://localhost:8000}
     model: ${SAFECITY_AI_MODEL:openai/clip-vit-base-patch32}
 
 management:
@@ -54,5 +74,5 @@ management:
 
 logging:
   level:
-    com.safecity: DEBUG
-    org.springframework.security: INFO
+    "com.safecity": DEBUG
+    "org.springframework.security": INFO

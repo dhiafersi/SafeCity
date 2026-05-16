@@ -12,6 +12,7 @@ import {
   divIcon, 
   marker 
 } from 'leaflet';
+import 'leaflet.heat';
 
 @Component({
   selector: 'app-dashboard',
@@ -244,7 +245,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         ${inc.description ? `<p style="margin:0;font-size:.8rem;color:#555;">${inc.description}</p>` : ''}
         ${inc.aiCategory ? `<div style="color:#7b1fa2;font-size:.75rem;margin-top:.3rem;">🤖 AI: ${inc.aiCategory} (${((inc.aiConfidence ?? 0) * 100).toFixed(1)}%)</div>` : ''}
         <div style="font-size:.72rem;color:#999;margin-top:.3rem;">
-          📍 ${inc.latitude.toFixed(4)}, ${inc.longitude.toFixed(4)}
+          📍 ${inc.latitude.toFixed(6)}, ${inc.longitude.toFixed(6)}
         </div>
       </div>
     `;
@@ -259,27 +260,35 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Build heatmap data: [lat, lng, intensity]
     const maxCount = Math.max(...this.heatmapPoints.map(p => p.count));
-    const data = this.heatmapPoints.map(p => [p.lat, p.lng, p.count / maxCount]);
+    const data = this.heatmapPoints.map(p => [p.lat, p.lng, Math.max(0.1, p.count / maxCount)]);
 
-    // @ts-ignore
-    const heatLayerFn = (window as any).L?.heatLayer;
-    if (heatLayerFn) {
-      this.heatLayer = heatLayerFn(data, {
+    // Access Leaflet Heat through the global window object
+    const L = (window as any).L;
+    if (L && L.heatLayer) {
+      this.heatLayer = L.heatLayer(data, {
         radius: 35,
         blur: 25,
         maxZoom: 17,
         gradient: { 0.2: '#1a237e', 0.5: '#e65100', 0.8: '#b71c1c', 1.0: '#ff1744' },
       });
-    }
 
-    if (this.heatmapVisible) {
-      this.heatLayer.addTo(this.map);
+      if (this.heatmapVisible && this.heatLayer) {
+        this.heatLayer.addTo(this.map);
+      }
+    } else {
+      console.warn('Leaflet Heat library not available');
     }
   }
 
   toggleHeatmap(): void {
     this.heatmapVisible = !this.heatmapVisible;
-    if (!this.heatLayer) return;
+    if (!this.heatLayer) {
+      if (this.heatmapVisible) {
+        // If toggling on but no layer exists, try to render it
+        this.renderHeatmap();
+      }
+      return;
+    }
 
     if (this.heatmapVisible) {
       this.heatLayer.addTo(this.map);

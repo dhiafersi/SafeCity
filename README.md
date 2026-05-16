@@ -17,7 +17,7 @@ Ensure you have **Docker** and **Docker Compose** installed.
    ```bash
    docker-compose up -d
    ```
-   *This starts: PostgreSQL (PostGIS), Keycloak, Spring Boot (Backend), and Angular (Frontend).*
+   *This starts: PostgreSQL (PostGIS), Keycloak, Spring Boot (Backend), Angular (Frontend), and the Python YOLO AI microservice.*
 
 3. **Access the Apps**:
    - **Frontend**: [http://localhost:4200](http://localhost:4200)
@@ -79,5 +79,5 @@ The project comes with a pre-configured Keycloak realm (`safecity`).
 
 ## 🔮 Next Steps
 - **AI Integration**: Replace the simulation in `AiAnalysisService.java` with a real REST call to a TorchServe/FastAPI YOLO model.
-- **Email Notifications**: Add `spring-boot-starter-mail` to notify citizens when their incident status changes.
+- **Email Notifications**: Implemented SMTP notification support for incident status updates. Configure `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`, and `SPRING_MAIL_FROM` in the backend environment.
 - **Native Mobile**: Use Capacitor to wrap this Angular app for iOS/Android.

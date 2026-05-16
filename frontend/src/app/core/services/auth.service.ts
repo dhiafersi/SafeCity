@@ -2,14 +2,33 @@ import { Injectable } from '@angular/core';
 import { OAuthService, AuthConfig } from 'angular-oauth2-oidc';
 import { environment } from '../../../environments/environment';
 import { Router } from '@angular/router';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private loginStateSubject = new BehaviorSubject<boolean>(false);
 
   constructor(
     private oauthService: OAuthService,
     private router: Router
-  ) {}
+  ) {
+    // Initialize login state
+    this.updateLoginState();
+
+    // Listen to OAuth events
+    this.oauthService.events.subscribe(() => {
+      this.updateLoginState();
+    });
+  }
+
+  private updateLoginState(): void {
+    const isLoggedIn = this.oauthService.hasValidAccessToken();
+    this.loginStateSubject.next(isLoggedIn);
+  }
+
+  get loginState$(): Observable<boolean> {
+    return this.loginStateSubject.asObservable();
+  }
 
   async initAuth(): Promise<void> {
     const authConfig: AuthConfig = {

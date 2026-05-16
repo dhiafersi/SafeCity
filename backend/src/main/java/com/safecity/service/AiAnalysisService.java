@@ -3,21 +3,24 @@ package com.safecity.service;
 import com.safecity.dto.AiAnalysisResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 /**
  * AI Image Analysis Service.
  *
- * Now INTEGRATED with Hugging Face Inference API for zero-shot classification.
+ * Now calls an external YOLO-based Python microservice when available.
  */
 @Slf4j
 @Service
@@ -26,93 +29,58 @@ public class AiAnalysisService {
     @Value("${safecity.ai.simulation-enabled:true}")
     private boolean simulationEnabled;
 
-    @Value("${safecity.ai.hf-token:#{null}}")
-    private String hfToken;
+    @Value("${safecity.ai.service-url:http://localhost:8000}")
+    private String aiServiceUrl;
 
-    @Value("${safecity.ai.model:openai/clip-vit-base-patch32}")
-    private String modelId;
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final Random random = new Random();
 
     private static final List<String> CATEGORIES = List.of(
         "POTHOLE", "WATER_LEAK", "BROKEN_STREETLIGHT",
         "GRAFFITI", "ILLEGAL_DUMPING", "FLOODING", "DAMAGED_SIGN"
     );
 
-    private static final List<String> HF_CANDIDATE_LABELS = List.of(
-        "pothole", "water leak", "broken street light",
-        "graffiti", "illegal dumping", "flooding", "damaged sign"
-    );
-
-    private final RestClient restClient = RestClient.create();
-    private final Random random = new Random();
-
     /**
-     * Analyzes image via HF Inference API or simulation.
+     * Analyzes image via external YOLO microservice or simulation.
      */
     public AiAnalysisResponse analyze(MultipartFile file) {
-        if (simulationEnabled || hfToken == null || hfToken.isBlank()) {
-            log.info("AI Service -> Simulation (Token missing: {})", hfToken == null || hfToken.isBlank());
+        if (simulationEnabled) {
+            log.info("AI Service -> Simulation enabled. Skipping external AI service.");
             return simulateAnalysis(file);
         }
 
         try {
             byte[] bytes = file.getBytes();
-            String base64Image = Base64.getEncoder().encodeToString(bytes);
+            log.info("AI Service -> Calling YOLO microservice at {}", aiServiceUrl);
 
-            log.info("AI Service -> Calling HF Inference API model: {}", modelId);
+            MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
+            formData.add("image", new ByteArrayResource(bytes) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            });
 
-            // Build payload for HF Zero-Shot Classification
-            Map<String, Object> payload = Map.of(
-                "inputs", base64Image,
-                "parameters", Map.of("candidate_labels", HF_CANDIDATE_LABELS)
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(formData, headers);
+
+            ResponseEntity<AiAnalysisResponse> response = restTemplate.postForEntity(
+                aiServiceUrl + "/analyze",
+                request,
+                AiAnalysisResponse.class
             );
 
-            List<Map<String, Object>> resultList = restClient.post()
-                .uri("https://api-inference.huggingface.co/models/" + modelId)
-                .header("Authorization", "Bearer " + hfToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(payload)
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
-
-            if (resultList == null || resultList.isEmpty()) {
-                log.warn("AI Service -> Empty response from HF API");
-                return simulateAnalysis(file);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                log.info("AI Service -> Received result from YOLO microservice.");
+                return response.getBody();
             }
 
-            // Zero-shot usually returns a list of classification objects sorted by score
-            // e.g., [{"label":"pothole", "score":0.95}, {"label":"graffiti", "score":0.02}, ...]
-            Map<String, Object> topResult = resultList.get(0);
-            String label = (String) topResult.get("label");
-            Double score = ((Number) topResult.get("score")).doubleValue();
-
-            // Map back to our internal enum-style categories
-            String category = mapLabelToCategory(label);
-            
-            AiAnalysisResponse response = new AiAnalysisResponse();
-            response.setCategory(category);
-            response.setConfidence(Math.round(score * 100.0) / 100.0);
-            response.setSimulated(false);
-            response.setMessage("AI Analysis via Hugging Face (" + modelId + ")");
-            
-            log.info("AI Service -> Result: label='{}' confidence={}", category, score);
-            return response;
-
-        } catch (Exception e) {
-            log.error("AI Service Error: {}. Falling back to simulation.", e.getMessage());
+            log.warn("AI Service -> Non-success response from YOLO microservice: {}", response.getStatusCode());
             return simulateAnalysis(file);
-        }
-    }
-
-    private String mapLabelToCategory(String label) {
-        if (label == null) return "DAMAGED_SIGN";
-        switch (label.toLowerCase()) {
-            case "pothole": return "POTHOLE";
-            case "water leak": return "WATER_LEAK";
-            case "broken street light": return "BROKEN_STREETLIGHT";
-            case "graffiti": return "GRAFFITI";
-            case "illegal dumping": return "ILLEGAL_DUMPING";
-            case "flooding": return "FLOODING";
-            default: return "DAMAGED_SIGN";
+        } catch (Exception e) {
+            log.error("AI Service Error: {}. Falling back to simulation.", e.getMessage(), e);
+            return simulateAnalysis(file);
         }
     }
 

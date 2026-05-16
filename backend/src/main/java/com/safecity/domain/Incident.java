@@ -36,6 +36,9 @@ public class Incident {
     @Column(name = "reporter_username")
     private String reporterUsername;
 
+    @Column(name = "reporter_email", length = 256)
+    private String reporterEmail;
+
     // ── Incident details ────────────────────────────────────────────────────
     @Column(nullable = false, length = 255)
     private String title;

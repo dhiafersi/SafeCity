@@ -1,0 +1,14 @@
+path: C:\Users\iyed\SafeCity\backend\ai-service/datasets/safecity
+
+train: images/train
+val: images/val
+
+names:
+  0: POTHOLE
+  1: WATER_LEAK
+  2: BROKEN_STREETLIGHT
+  3: GRAFFITI
+  4: ILLEGAL_DUMPING
+  5: DAMAGED_SIGN
+  6: FLOODING
+  7: etc

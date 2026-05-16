@@ -11,10 +11,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Objects;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -29,6 +31,7 @@ public class IncidentService {
     private final IncidentRepository incidentRepository;
     private final GamificationService gamificationService;
     private final AiAnalysisService aiAnalysisService;
+    private final EmailNotificationService emailNotificationService;
 
     // Upload directory (configurable; in production use object-storage)
     private static final String UPLOAD_DIR = "uploads/incidents/";
@@ -40,7 +43,8 @@ public class IncidentService {
         IncidentRequest request,
         MultipartFile photo,
         String keycloakId,
-        String username
+        String username,
+        String reporterEmail
     ) {
         String photoPath = null;
 
@@ -51,6 +55,7 @@ public class IncidentService {
         Incident incident = Incident.builder()
             .reporterKeycloakId(keycloakId)
             .reporterUsername(username)
+            .reporterEmail(reporterEmail)
             .title(request.getTitle())
             .description(request.getDescription())
             .latitude(request.getLatitude() != null ? request.getLatitude() : 37.2744)
@@ -68,6 +73,7 @@ public class IncidentService {
             incident.setAiConfidence(aiResult.getConfidence());
         }
 
+        Objects.requireNonNull(incident, "Incident must not be null");
         Incident saved = incidentRepository.save(incident);
         log.info("Incident created id={} by user={}", saved.getId(), username);
         return toResponse(saved);
@@ -76,24 +82,24 @@ public class IncidentService {
     // ── Read ─────────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public IncidentResponse getById(Long id) {
+    public IncidentResponse getById(@NonNull Long id) {
         return toResponse(findOrThrow(id));
     }
 
     @Transactional(readOnly = true)
-    public Page<IncidentResponse> getAll(Pageable pageable) {
+    public Page<IncidentResponse> getAll(@NonNull Pageable pageable) {
         return incidentRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
-    public Page<IncidentResponse> getMyIncidents(String keycloakId, Pageable pageable) {
+    public Page<IncidentResponse> getMyIncidents(String keycloakId, @NonNull Pageable pageable) {
         return incidentRepository.findByReporterKeycloakId(keycloakId, pageable).map(this::toResponse);
     }
 
     // ── Update status (Admin) ─────────────────────────────────────────────────
 
     @Transactional
-    public IncidentResponse updateStatus(Long id, StatusUpdateRequest request) {
+    public IncidentResponse updateStatus(@NonNull Long id, StatusUpdateRequest request) {
         Incident incident = findOrThrow(id);
         IncidentStatus previousStatus = incident.getStatus();
         IncidentStatus newStatus = request.getStatus();
@@ -113,21 +119,26 @@ public class IncidentService {
             incident.setResolvedAt(LocalDateTime.now());
         }
 
-        return toResponse(incidentRepository.save(incident));
+        Incident saved = incidentRepository.save(incident);
+        // Send email asynchronously - non-blocking
+        emailNotificationService.sendIncidentStatusChange(saved, previousStatus);
+        return toResponse(saved);
     }
 
     // ── Delete (Admin) ───────────────────────────────────────────────────────
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
         Incident incident = findOrThrow(id);
+        Objects.requireNonNull(incident, "Incident must not be null");
         incidentRepository.delete(incident);
         log.info("Incident deleted id={}", id);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private Incident findOrThrow(Long id) {
+    private Incident findOrThrow(@NonNull Long id) {
+        Objects.requireNonNull(id, "Incident id must not be null");
         return incidentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Incident not found: " + id));
     }
@@ -139,7 +150,7 @@ public class IncidentService {
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
             Path target = dir.resolve(fileName);
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-            return UPLOAD_DIR + fileName;
+            return fileName;
         } catch (IOException e) {
             log.error("Failed to store photo", e);
             return null;
