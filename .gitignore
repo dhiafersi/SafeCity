@@ -32,3 +32,12 @@ yarn-error.log*
 
 # Docker
 .docker/
+
+# AI datasets and generated model artifacts
+/backend/ai-service/datasets/
+/backend/ai-service/runs/
+/backend/ai-service/*.pt
+
+# Uploaded files and runtime storage
+/uploads/
+/backend/uploads/
