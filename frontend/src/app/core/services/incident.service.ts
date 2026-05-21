@@ -23,6 +23,8 @@ export interface IncidentResponse {
   latitude: number;
   longitude: number;
   address?: string;
+  governorate?: string;
+  delegation?: string;
   aiCategory?: string;
   aiConfidence?: number;
   photoPath?: string;
@@ -75,6 +77,12 @@ export class IncidentService {
   getAll(page = 0, size = 20): Observable<PageResponse<IncidentResponse>> {
     const params = new HttpParams().set('page', page).set('size', size).set('sort', 'createdAt,desc');
     return this.http.get<PageResponse<IncidentResponse>>(this.base, { params });
+  }
+
+  getAdminStats(governorate?: string): Observable<any> {
+    let params = new HttpParams();
+    if (governorate) params = params.set('governorate', governorate);
+    return this.http.get<any>(`${environment.apiBaseUrl}/api/admin/stats/summary`, { params });
   }
 
   getMyIncidents(page = 0, size = 10): Observable<PageResponse<IncidentResponse>> {

@@ -1,7 +1,9 @@
 package com.safecity.controller;
 
+import com.safecity.domain.Incident;
 import com.safecity.dto.AnalyticsResponse;
 import com.safecity.repository.IncidentRepository;
+import com.safecity.service.SmartCityTipService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,12 +22,14 @@ import java.util.stream.Collectors;
 public class AnalyticsController {
 
     private final IncidentRepository incidentRepository;
+    private final SmartCityTipService smartCityTipService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AnalyticsResponse> getAnalytics() {
+        List<Incident> allIncidents = incidentRepository.findAll();
         Double avgResTime = incidentRepository.findAverageResolutionTime();
-        
+
         List<AnalyticsResponse.CategoryStat> categoryStats = incidentRepository.findCategoryStats().stream()
                 .map(row -> new AnalyticsResponse.CategoryStat(
                         row[0] != null ? row[0].toString() : "OTHER",
@@ -39,7 +43,7 @@ public class AnalyticsController {
                 .collect(Collectors.toList());
 
         // Derived Neighborhoods from address (simple split by comma)
-        Map<String, Long> neighborhoodCounts = incidentRepository.findAll().stream()
+        Map<String, Long> neighborhoodCounts = allIncidents.stream()
                 .map(i -> i.getAddress() != null ? i.getAddress().split(",")[0].trim() : "Unknown")
                 .filter(a -> !a.isEmpty())
                 .collect(Collectors.groupingBy(a -> a, Collectors.counting()));
@@ -55,11 +59,39 @@ public class AnalyticsController {
                 .limit(5)
                 .collect(Collectors.toList());
 
+        String regionName = allIncidents.stream()
+                .map(Incident::getAddress)
+                .filter(addr -> addr != null && !addr.isBlank())
+                .map(addr -> {
+                    String[] parts = addr.split(",");
+                    return parts.length > 0 ? parts[parts.length - 1].trim() : "";
+                })
+                .filter(name -> !name.isBlank())
+                .collect(Collectors.groupingBy(name -> name, Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse("City");
+
+        String categoriesSummary = categoryStats.stream()
+                .map(s -> s.getCategory() + "(" + s.getCount() + ")")
+                .collect(Collectors.joining(", "));
+
+        String topNbh = neighborhoodStats.stream()
+                .map(n -> n.get("name") + "(" + n.get("count") + ")")
+                .collect(Collectors.joining(", "));
+
+        String smartCityTip = smartCityTipService
+                .generateSmartCityTip(regionName, categoriesSummary, topNbh)
+                .getTip();
+
         return ResponseEntity.ok(AnalyticsResponse.builder()
                 .averageResolutionTime(avgResTime != null ? avgResTime : 0.0)
                 .categorySplit(categoryStats)
                 .resolutionTrend(trendStats)
                 .neighborhoodStats(neighborhoodStats)
+                .regionName(regionName)
+                .smartCityTip(smartCityTip)
                 .build());
     }
 }

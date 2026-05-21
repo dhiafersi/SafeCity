@@ -78,6 +78,8 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-kjhXYmnxv03HAc6Z}
       SMTP_AUTH: ${SMTP_AUTH:-true}
       SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
     ports:
       - "8081:8081"
     volumes:

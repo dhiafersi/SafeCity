@@ -15,13 +15,22 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
         <span class="total-badge">{{ totalElements }} total</span>
       </div>
 
+
       <!-- Filters -->
       <div class="filters-bar">
-        <select [(ngModel)]="filterStatus" (ngModelChange)="loadIncidents()" class="filter-select">
+        <select [(ngModel)]="filterStatus" (ngModelChange)="applyFilters()" class="filter-select">
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>
           <option value="VALIDATED">Validated</option>
           <option value="RESOLVED">Resolved</option>
+        </select>
+        <select [(ngModel)]="filterGovernorate" (ngModelChange)="onGovernorateChange()" class="filter-select">
+          <option value="">All Gouvernorats</option>
+          <option *ngFor="let governorate of governorates" [value]="governorate">{{ governorate }}</option>
+        </select>
+        <select [(ngModel)]="filterDelegation" (ngModelChange)="applyFilters()" class="filter-select" [disabled]="!filterGovernorate">
+          <option value="">All Delegations</option>
+          <option *ngFor="let delegation of delegations" [value]="delegation">{{ delegation }}</option>
         </select>
         <button class="btn-refresh" (click)="loadIncidents()">🔄 Refresh</button>
       </div>
@@ -30,13 +39,14 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
       <div class="table-wrapper">
         <div class="loading" *ngIf="loading">Loading incidents...</div>
 
-        <table *ngIf="!loading && incidents.length > 0" class="incidents-table">
+        <table *ngIf="!loading && displayIncidents.length > 0" class="incidents-table">
           <thead>
             <tr>
               <th>#</th>
               <th>Title</th>
               <th>Reporter</th>
               <th>Category</th>
+              <th>Delegation</th>
               <th>AI Tag</th>
               <th>Status</th>
               <th>Date</th>
@@ -44,7 +54,7 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let inc of incidents">
+            <tr *ngFor="let inc of displayIncidents">
               <td class="id-cell">{{ inc.id }}</td>
               <td class="title-cell">
                 <span>{{ inc.title }}</span>
@@ -52,6 +62,7 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
               </td>
               <td>{{ inc.reporterUsername }}</td>
               <td>{{ inc.category ?? '—' }}</td>
+              <td>{{ inc.delegation ?? inc.governorate ?? '—' }}</td>
               <td>
                 <span class="ai-tag" *ngIf="inc.aiCategory">
                   {{ inc.aiCategory }}
@@ -90,7 +101,7 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
           </tbody>
         </table>
 
-        <div class="empty" *ngIf="!loading && incidents.length === 0">
+        <div class="empty" *ngIf="!loading && displayIncidents.length === 0">
           No incidents found for this filter.
         </div>
       </div>
@@ -207,14 +218,21 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
 })
 export class IncidentsListComponent implements OnInit {
   incidents: IncidentResponse[] = [];
+  displayIncidents: IncidentResponse[] = [];
   loading = true;
   updating: number | null = null;
   filterStatus = '';
+  filterGovernorate = '';
+  filterDelegation = '';
 
   currentPage  = 0;
   totalPages   = 0;
   totalElements = 0;
   pageSize     = 15;
+
+  governorates: string[] = [];
+  delegations: string[] = [];
+  private locationCache: Record<string, { governorate?: string; delegation?: string; }> = {};
 
   toastMsg  = '';
   toastType = 'success';
@@ -228,17 +246,94 @@ export class IncidentsListComponent implements OnInit {
   loadIncidents(): void {
     this.loading = true;
     this.incidentService.getAll(this.currentPage, this.pageSize).subscribe({
-      next: (page: PageResponse<IncidentResponse>) => {
+      next: async (page: PageResponse<IncidentResponse>) => {
         this.incidents     = page.content;
         this.totalPages    = page.totalPages;
         this.totalElements = page.totalElements;
-        this.loading       = false;
+
+        await this.assignLocations(this.incidents);
+        this.applyFilters();
+        this.loading = false;
       },
       error: () => {
         this.showToast('Failed to load incidents', 'error');
         this.loading = false;
       }
     });
+  }
+
+  applyFilters(): void {
+    this.displayIncidents = this.incidents.filter(incident => {
+      const statusMatch = !this.filterStatus || incident.status === this.filterStatus;
+      const governorateMatch = !this.filterGovernorate || incident.governorate === this.filterGovernorate;
+      const delegationMatch = !this.filterDelegation || incident.delegation === this.filterDelegation;
+      return statusMatch && governorateMatch && delegationMatch;
+    });
+  }
+
+  private async assignLocations(incidents: IncidentResponse[]): Promise<void> {
+    const promises = incidents.map(async incident => {
+      if (incident.governorate || incident.delegation) return;
+      const cacheKey = `${incident.latitude},${incident.longitude}`;
+      if (this.locationCache[cacheKey]) {
+        incident.governorate = this.locationCache[cacheKey].governorate;
+        incident.delegation = this.locationCache[cacheKey].delegation;
+        return;
+      }
+
+      const location = await this.getLocation(incident.latitude, incident.longitude);
+      incident.governorate = location.governorate;
+      incident.delegation = location.delegation;
+      this.locationCache[cacheKey] = location;
+    });
+
+    await Promise.all(promises);
+    this.governorates = Array.from(new Set(incidents
+      .map(i => i.governorate)
+      .filter((g): g is string => !!g)
+      .sort()));
+
+    this.updateDelegations();
+  }
+
+  private updateDelegations(): void {
+    if (!this.filterGovernorate) {
+      this.delegations = [];
+      this.filterDelegation = '';
+      return;
+    }
+
+    this.delegations = Array.from(new Set(this.incidents
+      .filter(i => i.governorate === this.filterGovernorate)
+      .map(i => i.delegation)
+      .filter((d): d is string => !!d)
+      .sort()));
+
+    if (this.filterDelegation && !this.delegations.includes(this.filterDelegation)) {
+      this.filterDelegation = '';
+    }
+  }
+
+  onGovernorateChange(): void {
+    this.updateDelegations();
+    this.applyFilters();
+  }
+
+
+  private async getLocation(lat: number, lon: number): Promise<{ governorate?: string; delegation?: string }> {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&format=json&addressdetails=1&zoom=12`;
+      const response = await fetch(url);
+      if (!response.ok) return {};
+
+      const data = await response.json();
+      const address = data?.address || {};
+      const governorate = address.state || address.region || address.country;
+      const delegation = address.state_district || address.county || address.city || address.town || address.village || address.suburb;
+      return { governorate, delegation };
+    } catch {
+      return {};
+    }
   }
 
   goTo(page: number): void {

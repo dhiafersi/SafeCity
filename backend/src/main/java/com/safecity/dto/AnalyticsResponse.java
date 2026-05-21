@@ -15,6 +15,8 @@ public class AnalyticsResponse {
     private List<CategoryStat> categorySplit;
     private List<ResolutionTrendStat> resolutionTrend;
     private List<Map<String, Object>> neighborhoodStats;
+    private String regionName;
+    private String smartCityTip;
 
     @Getter @Setter @AllArgsConstructor @NoArgsConstructor
     public static class CategoryStat {

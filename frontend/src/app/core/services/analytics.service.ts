@@ -18,6 +18,8 @@ export interface AnalyticsResponse {
   categorySplit: CategoryStat[];
   resolutionTrend: ResolutionTrendStat[];
   neighborhoodStats: { name: string, count: number }[];
+  regionName?: string;
+  smartCityTip?: string;
 }
 
 @Injectable({ providedIn: 'root' })

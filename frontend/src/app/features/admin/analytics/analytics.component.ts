@@ -15,7 +15,7 @@ Chart.register(...registerables);
       <header class="page-header">
         <div>
           <h1>📊 City Analytics Dashboard</h1>
-          <p>Bizerte Smart City Insights & Resource Optimization</p>
+          <p>{{ analyticsData?.regionName ? (analyticsData?.regionName + ' Smart City Insights & Resource Optimization') : 'Smart City Insights & Resource Optimization' }}</p>
         </div>
         <div class="header-actions">
           <a routerLink="/admin/dashboard" class="btn-secondary">🗺️ Map View</a>
@@ -52,7 +52,7 @@ Chart.register(...registerables);
 
       <div class="full-width-card">
         <h3>📍 Top Active Neighborhoods</h3>
-        <p class="chart-subtitle">Most reported areas in Bizerte</p>
+        <p class="chart-subtitle">{{ analyticsData?.regionName ? ('Most reported areas in ' + analyticsData?.regionName) : 'Most reported areas' }}</p>
         <div class="neighborhood-list">
           <div *ngFor="let n of analyticsData?.neighborhoodStats" class="neighborhood-item">
             <span class="n-name">{{ n.name }}</span>
@@ -66,7 +66,7 @@ Chart.register(...registerables);
 
       <div class="full-width-card" style="margin-top: 1.5rem;">
         <h3>💡 Smart City Tip</h3>
-        <p>Bizerte's infrastructure is showing signs of stress in <strong>Water Leak</strong> categories. Early maintenance in identified hot neighborhoods can save 30% on repair costs.</p>
+        <p>{{ analyticsData?.smartCityTip || 'No AI recommendation available.' }}</p>
       </div>
     </div>
   `,

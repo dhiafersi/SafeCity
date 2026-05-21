@@ -227,13 +227,19 @@ export class ReportIncidentComponent implements OnInit {
     }
     this.locationLoading = true;
     navigator.geolocation.getCurrentPosition(
-      pos => {
-        this.form.patchValue({
-          latitude:  Number(pos.coords.latitude.toFixed(6)),
-          longitude: Number(pos.coords.longitude.toFixed(6)),
-        });
-        this.locationLoading = false;
+      async pos => {
+        const latitude = Number(pos.coords.latitude.toFixed(6));
+        const longitude = Number(pos.coords.longitude.toFixed(6));
+
+        this.form.patchValue({ latitude, longitude });
         this.locationCaptured = true;
+
+        const address = await this.reverseGeocodeAddress(latitude, longitude);
+        if (address) {
+          this.form.patchValue({ address });
+        }
+
+        this.locationLoading = false;
       },
       err => {
         this.errorMsg = 'Could not detect location. Please enter manually.';
@@ -241,6 +247,35 @@ export class ReportIncidentComponent implements OnInit {
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  }
+
+  private async reverseGeocodeAddress(lat: number, lon: number): Promise<string | null> {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat.toString())}` +
+                  `&lon=${encodeURIComponent(lon.toString())}` +
+                  `&format=json&addressdetails=1&zoom=18`;
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'SafeCity/1.0' }
+      });
+      if (!response.ok) return null;
+      const data = await response.json();
+      const address = data?.address || {};
+      const road = address.road || address.pedestrian || address.cycleway || address.footway;
+      const houseNumber = address.house_number;
+      const neighbourhood = address.neighbourhood || address.suburb || address.city_district;
+      const city = address.city || address.town || address.village || address.county;
+
+      let parts = [];
+      if (houseNumber) parts.push(houseNumber);
+      if (road) parts.push(road);
+      if (neighbourhood) parts.push(neighbourhood);
+      if (city) parts.push(city);
+
+      return parts.length ? parts.join(', ') : null;
+    } catch (err) {
+      console.warn('Reverse geocode failed:', err);
+      return null;
+    }
   }
 
   onFileChange(event: Event): void {
