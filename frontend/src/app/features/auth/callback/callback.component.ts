@@ -41,6 +41,8 @@ export class CallbackComponent implements OnInit {
     setTimeout(() => {
       if (this.auth.hasRole('ADMIN')) {
         this.router.navigate(['/admin/dashboard']);
+      } else if (this.auth.hasRole('DEPARTMENT')) {
+        this.router.navigate(['/department/incidents']);
       } else if (this.auth.hasRole('CITIZEN')) {
         this.router.navigate(['/citizen/report']);
       } else {

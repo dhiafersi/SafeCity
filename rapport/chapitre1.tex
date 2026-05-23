@@ -1,0 +1,109 @@
+% ==============================================================================
+% FICHIER : chapitre1.tex
+% Description : Chapitre 1 : Étude préalable
+% Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
+% Organisme d'accueil : HRMAPS
+% ==============================================================================
+
+\chapter{Étude préalable}
+
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+Ce premier chapitre est consacré à l'étude préalable de notre projet de fin d'études. Cette étape permet d'analyser le contexte général du projet, de comprendre le fonctionnement de notre organisme d'accueil, d'évaluer l'existant avec ses forces et ses limites, et de proposer une solution pertinente et adaptée. Il pose les fondations méthodologiques et fonctionnelles nécessaires pour le bon déroulement du projet.
+
+% ------------------------------------------------------------------------------
+% 1. PRÉSENTATION DE L'ORGANISME D'ACCUEIL
+% ------------------------------------------------------------------------------
+\section{Présentation de l'organisme d'accueil}
+
+\subsection{Présentation générale}
+L'organisme d'accueil choisi pour la réalisation de ce Projet de Fin d'Études est \textbf{HRMAPS}.
+
+Fondée initialement à Lyon (France) en 2014, HRMAPS s'est positionnée comme un éditeur de logiciels innovant, spécialisé dans le Talent Management (gestion des talents). En 2018, la société franchit un cap stratégique majeur en intégrant le \textbf{Groupe OCTIME}, l'un des leaders européens de la gestion des temps, de la planification et des solutions RH en mode SaaS (Cloud).
+
+Pour piloter ses activités, assurer le déploiement technique et accompagner la transformation digitale des entreprises en Tunisie et sur toute la région de l'Afrique du Nord, la solution s'appuie sur une structure d'intégration et d'expertise locale. Présente en Tunisie depuis 2008, cette structure apporte l'expertise technique et la proximité nécessaires pour adapter l'outil international aux spécificités juridiques, fiscales et organisationnelles du marché tunisien.
+
+Le tableau \ref{tab:identite_entreprise} résume les informations administratives, géographiques et juridiques majeures de notre organisme d'accueil :
+
+\begin{table}[H]
+    \centering
+    \caption{Fiche d'identité de HRMAPS Tunisie}
+    \label{tab:identite_entreprise}
+    \vspace{0.3cm}
+    \begin{tabularx}{\textwidth}{l X}
+        \toprule
+        \textbf{Libellé} & \textbf{Description} \\
+        \midrule
+        \textbf{Raison Sociale} & HRMAPS (Membre du Groupe OCTIME) \\
+        \textbf{Secteur d'Activité} & Technologies de l'Information (IT) \& Édition de Logiciels \\
+        \textbf{Domaine de Spécialisation} & Solutions de Gestion, SIRH et Management des Talents \\
+        \textbf{Modèle Économique} & Solutions Cloud / SaaS (Software as a Service) \\
+        \textbf{Adresse du Siège Local} & Immeuble Promed, Bloc B, 7ème étage, Centre Urbain Nord, Tunis 1082, Tunisie \\
+        \textbf{Téléphone} & +216 71 883 780 \\
+        \textbf{Sites Web Officiels} & \href{https://www.hrmaps.fr}{www.hrmaps.fr} / \href{https://www.octime.com}{www.octime.com} \\
+        \textbf{Principaux Clients en Tunisie} & Monoprix, Magasin Général, Géant, ASSAD, OLEA, Boudjebel, etc. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{Services}
+L'activité majeure de l'organisme d'accueil gravite autour du déploiement de son SIRH (Système d'Information des Ressources Humaines). La plateforme HRMAPS est une solution modulaire qui automatise et digitalise l'intégralité des processus RH à travers trois grands axes :
+
+\begin{itemize}
+    \item \textbf{Le Core RH \& l'Administration} : Centralisation du dossier numérique du collaborateur, portail Self-Service pour la gestion des demandes de congés, des absences et des notes de frais, circuits de validation automatisés (Workflows).
+    \item \textbf{La Gestion des Talents} : Digitalisation du recrutement (Suivi des candidats / ATS), processus d'intégration (Onboarding), grilles d'évaluations de performance, cartographie des compétences et plans de formation.
+    \item \textbf{Le Pilotage Décisionnel} : Génération automatique de tableaux de bord RH, édition du bilan social et interfaçage natif avec les solutions de paie tierces du marché.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure : Organigramme structurel de HRMAPS]}\hss}\vfill}}
+    \caption{Organigramme structurel de HRMAPS}
+    \label{fig:organigramme_hrmaps}
+\end{figure}
+
+% ------------------------------------------------------------------------------
+% 2. PRÉSENTATION DU PROJET
+% ------------------------------------------------------------------------------
+\section{Présentation du projet}
+Le projet \textbf{SafeCity-Connect} a pour objectif d'apporter une solution technologique innovante en connectant directement les citoyens aux services de maintenance de leur ville, en utilisant le meilleur des technologies du web, du cloud et de l'intelligence artificielle. Il s'agit d'une plateforme citoyenne de signalement géo-localisé des incidents urbains (nids-de-poule, fuites d'eau, pannes d'éclairage public). Le projet simplifie l'interaction citoyenne, automatise la classification des anomalies grâce à l'IA, et fournit aux administrateurs municipaux des outils de pilotage cartographique et statistique.
+
+% ------------------------------------------------------------------------------
+% 3. ÉTUDE DE L'EXISTANT
+% ------------------------------------------------------------------------------
+\section{Étude de l'existant}
+
+\subsection{Analyse de l'existant}
+Traditionnellement, la détection et la remontée des anomalies urbaines au sein des communes tunisiennes reposent sur des processus manuels ou semi-manuels :
+\begin{itemize}
+    \item \textbf{Signalements physiques ou téléphoniques} : Le citoyen doit se déplacer au guichet de la municipalité ou tenter de joindre un standard téléphonique pour déclarer un problème (ex : route endommagée, lampe cassée).
+    \item \textbf{Tournées d'inspection planifiées} : Les agents de la voirie effectuent périodiquement des tournées d'inspection pour recenser visuellement les dégâts.
+    \item \textbf{Enregistrement papier} : Les requêtes reçues sont transcrites sur des registres physiques ou dans des fichiers Excel isolés, puis transmises manuellement aux équipes de réparation.
+\end{itemize}
+
+\subsection{Critique de l'existant}
+Ce fonctionnement traditionnel présente de nombreuses failles majeures :
+\begin{itemize}
+    \item \textbf{Lenteur extrême} : Les délais entre la détection d'une anomalie et son enregistrement effectif par les services techniques peuvent prendre plusieurs semaines.
+    \item \textbf{Manque crucial de précision} : Les descriptions verbales ou écrites fournies par les citoyens sont souvent vagues et manquent de coordonnées précises, obligeant les équipes d'intervention à passer du temps à chercher l'incident sur place.
+    \item \textbf{Surcharge administrative et erreurs} : La saisie manuelle et le tri des plaintes prennent énormément de temps aux agents municipaux, entraînant parfois la perte ou l'oubli de dossiers.
+    \item \textbf{Absence de transparence et de retour d'information} : Les citoyens ne reçoivent aucun suivi de leurs plaintes, ce qui engendre un sentiment de frustration et un désengagement civique total.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% 4. SOLUTION PROPOSÉE
+% ------------------------------------------------------------------------------
+\section{Solution proposée}
+Pour remédier aux lacunes de l'existant, nous proposons le développement de la plateforme \textbf{SafeCity-Connect}, un écosystème logiciel modulaire composé d'une \textbf{application web d'administration (Angular 18)} et d'une \textbf{application mobile multiplateforme (Flutter)} destinée aux citoyens et aux agents de terrain. Ses fonctionnalités phares incluent :
+\begin{enumerate}
+    \item \textbf{Application Mobile (Flutter)} : Permet aux citoyens de signaler un incident géo-localisé en prenant une photo, de suivre son statut de résolution (fixé ou non) directement sur la carte, de laisser des commentaires, et de donner leur avis après la résolution de l'anomalie (\textit{review fixes}). Elle permet aussi aux agents des départements techniques (dont les comptes sont créés par l'administrateur) de s'authentifier pour visualiser et clore leurs interventions sur site.
+    \item \textbf{Catégorisation IA Automatique} : Analyse instantanée de la photo de l'incident par un réseau YOLO pour suggérer automatiquement sa catégorie (nid-de-poule, fuite d'eau, déchets).
+    \item \textbf{Système d'Alertes et Notifications par Email} : Envoi automatique d'un e-mail de notification au service d'administration municipale dès qu'un citoyen soumet un nouveau signalement sur la carte de la ville.
+    \item \textbf{Portail Web d'Administration (Angular 18)} : Permet de gérer les catégories, de créer les comptes des agents techniques, d'affecter les incidents aux différents départements, de suivre la carte thermique (\textit{Heatmap}) PostGIS et de consulter des indicateurs analytiques.
+    \item \textbf{Flux de Clôture et Modération de la Fixation} : L'agent de terrain effectue les travaux et soumet une \textbf{photo preuve de résolution}. L'administrateur étudie cette preuve et peut \textbf{valider} ou \textbf{rejeter} l'intervention en saisissant obligatoirement un \textbf{motif de refus} enregistré dans la timeline de l'incident.
+    \item \textbf{Reporting Décisionnel et Exports PDF} : Permet à l'administrateur d'exporter le récapitulatif hebdomadaire des incidents au format Excel/CSV et de générer un rapport PDF individuel complet et officiel pour chaque incident (comprenant les photos avant/après, la timeline interne, les commentaires et les acteurs impliqués).
+\end{enumerate}
+
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
+L'étude préalable réalisée dans ce chapitre nous a permis de justifier pleinement la nécessité de développer la plateforme \textit{SafeCity-Connect}. En analysant l'existant, nous avons mis en lumière les blocages administratifs et opérationnels actuels. La solution proposée offrira une réactivité accrue et modernisera la communication municipale. Le chapitre suivant détaillera la planification du projet ainsi que son architecture globale.

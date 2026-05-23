@@ -41,3 +41,11 @@ yarn-error.log*
 # Uploaded files and runtime storage
 /uploads/
 /backend/uploads/
+
+# Log files
+*.log
+
+# Python cache
+__pycache__/
+.pytest_cache/
+

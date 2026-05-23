@@ -57,7 +57,7 @@ export class UnauthorizedComponent {
         ? this.router.navigate(['/admin/dashboard'])
         : this.router.navigate(['/citizen/report']);
     } else {
-      this.auth.login();
+      this.router.navigate(['/login']);
     }
   }
 }

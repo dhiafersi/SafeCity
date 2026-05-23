@@ -1,0 +1,224 @@
+% ==============================================================================
+% FICHIER PRINCIPAL : main.tex
+% Projet de Fin d'Études : SafeCity-Connect
+% Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
+% Organisme d'accueil : HRMAPS
+% ==============================================================================
+
+\documentclass[12pt,a4paper,oneside]{report}
+
+\usepackage[table]{xcolor} % Pour colorer les cellules des tableaux de la page de garde
+
+
+% ------------------------------------------------------------------------------
+% 1. Encodage et Langue
+% ------------------------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% ------------------------------------------------------------------------------
+% 2. Police et Style de Texte (Times New Roman)
+% ------------------------------------------------------------------------------
+\usepackage{mathptmx} % Police Times New Roman de haute qualité
+\usepackage{setspace}
+\onehalfspacing % Interligne 1.5
+\usepackage{microtype} % Pour optimiser la justification et éviter les grands espaces entre les mots
+
+
+% ------------------------------------------------------------------------------
+% 3. Marges (2.5 haut/bas, 3 gauche, 2 droite)
+% ------------------------------------------------------------------------------
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=2cm]{geometry}
+
+% ------------------------------------------------------------------------------
+% 4. Espacement des Paragraphes
+% ------------------------------------------------------------------------------
+\setlength{\parskip}{6pt} % Espacement de 6pt entre les paragraphes
+\setlength{\parindent}{0.75cm} % Retrait de paragraphe standard
+\usepackage{indentfirst} % Indenter le premier paragraphe après un titre
+
+% ------------------------------------------------------------------------------
+% 5. Titres et Espacements (Même niveau vertical, tailles distinctes)
+% ------------------------------------------------------------------------------
+\usepackage{titlesec}
+\usepackage{amssymb} % Pour les symboles de puces (carré)
+
+% Format des chapitres
+\titleformat{\chapter}[block]
+  {\normalfont\LARGE\bfseries\raggedright}
+  {\chaptertitlename\ \thechapter\quad }
+  {0pt}
+  {\LARGE}
+\titlespacing*{\chapter}{0pt}{12pt}{6pt}
+
+% Format des sections (1.)
+\titleformat{\section}[block]
+  {\normalfont\Large\bfseries\raggedright}
+  {\thesection.\quad }
+  {0pt}
+  {\Large}
+\titlespacing*{\section}{0pt}{6pt}{6pt}
+
+% Format des sous-sections (1.1.)
+\titleformat{\subsection}[block]
+  {\normalfont\large\bfseries\raggedright}
+  {\thesubsection.\quad }
+  {0pt}
+  {\large}
+\titlespacing*{\subsection}{0pt}{6pt}{6pt}
+
+% Format des sous-sous-sections (1.1.1.)
+\titleformat{\subsubsection}[block]
+  {\normalfont\normalsize\bfseries\itshape\raggedright}
+  {\thesubsubsection.\quad }
+  {0pt}
+  {\normalsize\itshape}
+\titlespacing*{\subsubsection}{0pt}{6pt}{6pt}
+
+% ------------------------------------------------------------------------------
+% 6. Numérotation et Pagination
+% ------------------------------------------------------------------------------
+% Profondeur de numérotation et de table des matières (jusqu'à 1.1.1.a)
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+
+% Redéfinition de la numérotation (Section = 1, Subsection = 1.1, Subsubsection = 1.1.1, Paragraph = 1.1.1.a)
+\renewcommand{\thechapter}{\arabic{chapter}}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+\renewcommand{\theparagraph}{\thesubsubsection.\alph{paragraph}}
+
+% Format de paragraphe (1.1.1.a) comme un titre de bloc
+\titleformat{\paragraph}[block]
+  {\normalfont\normalsize\bfseries\raggedright}
+  {\theparagraph.\quad }
+  {0pt}
+  {\normalsize}
+\titlespacing*{\paragraph}{0pt}{6pt}{6pt}
+
+% ------------------------------------------------------------------------------
+% 7. En-têtes et Pieds de Page (fancyhdr)
+% ------------------------------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % Nettoyer en-têtes et pieds par défaut
+
+% En-tête
+\fancyhead[L]{\nouppercase{\leftmark}} % Titre du chapitre courant
+\fancyhead[R]{SafeCity-Connect} % Titre du projet
+\renewcommand{\headrulewidth}{0.4pt} % Ligne séparatrice fine
+
+% Pied de page
+\fancyfoot[C]{\thepage} % Numéro de page au centre
+\renewcommand{\footrulewidth}{0pt} % Pas de ligne en bas
+
+% Redéfinir le style "plain" pour les débuts de chapitres
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+% ------------------------------------------------------------------------------
+% 8. Puces et Listes Uniformes (enumitem)
+% ------------------------------------------------------------------------------
+\usepackage{enumitem}
+% Définition des symboles de puces par niveau (point, cercle, tiret, carré)
+\setlist[itemize,1]{label=$\bullet$, leftmargin=1.5cm, topsep=4pt, itemsep=2pt, parsep=0pt}
+\setlist[itemize,2]{label=$\circ$, leftmargin=1.2cm, topsep=3pt, itemsep=2pt, parsep=0pt}
+\setlist[itemize,3]{label={--}, leftmargin=1.0cm, topsep=3pt, itemsep=2pt, parsep=0pt}
+\setlist[itemize,4]{label=$\blacksquare$, leftmargin=0.8cm, topsep=3pt, itemsep=2pt, parsep=0pt}
+
+% Pour les listes numérotées
+\setlist[enumerate,1]{label=\arabic*., leftmargin=1.5cm}
+\setlist[enumerate,2]{label=\alph*., leftmargin=1.2cm}
+
+% ------------------------------------------------------------------------------
+% 9. Gestion des Images, Tableaux et Liens
+% ------------------------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{booktabs} % Pour des tableaux professionnels
+\usepackage{tabularx} % Tableaux à largeur ajustable
+\usepackage{hyperref} % Liens cliquables
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black, % Liens noirs pour l'impression du rapport
+    filecolor=black,
+    urlcolor=blue,
+    citecolor=black
+}
+\usepackage{float} % Pour forcer le positionnement des images (H)
+
+% Dossier contenant les images et logos
+\graphicspath{{./}{./rapport/}}
+
+% ------------------------------------------------------------------------------
+% DOCUMENT PRINCIPAL
+% ------------------------------------------------------------------------------
+\begin{document}
+
+% --- PARTIE INITIALE (Pagination en chiffres romains) ---
+\pagenumbering{roman}
+
+% Page de garde
+\input{page_de_garde}
+\newpage
+
+% Dédicaces & Remerciements
+\input{dedicaces_remerciements}
+\newpage
+
+% Table des matières, des figures et des tableaux
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+\listoftables
+\newpage
+
+% --- CORPS DU TEXTE (Pagination en chiffres arabes dès l'Intro Générale) ---
+\pagenumbering{arabic}
+\setcounter{page}{1} % Force le commencement de la page 1
+
+% Introduction générale
+\input{introduction_generale}
+\newpage
+
+% Chapitre 1 : Étude préalable
+\input{chapitre1}
+\newpage
+
+% Chapitre 2 : Planification & architecture
+\input{chapitre2}
+\newpage
+
+% Chapitre 3 : Sprint 0 -- Architecture logicielle et Outils de développement
+\input{chapitre3}
+\newpage
+
+% Chapitre 4 : Sprint 1 -- Inscription, Authentification, Gestion profil
+\input{chapitre4}
+\newpage
+
+% Chapitre 5 : Sprint 2 -- Gestion des Signalements et Analyse IA
+\input{chapitre5}
+\newpage
+
+% Chapitre 6 : Sprint 3 -- Espace Administration, Heatmap et Statistiques
+\input{chapitre6}
+\newpage
+
+% Chapitre 7 : Sprint 4 -- Espace Gamification et Historique Citoyen
+\input{chapitre7}
+\newpage
+
+% Conclusion générale
+\input{conclusion_generale}
+\newpage
+
+% Bibliographie / Webographie
+\input{bibliographie}
+
+\end{document}

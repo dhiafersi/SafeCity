@@ -61,15 +61,28 @@ public class SecurityConfig {
                 // Incident creation – citizens
                 .requestMatchers(HttpMethod.POST, "/api/incidents").hasRole("CITIZEN")
 
-                // Incident read – both roles (secured endpoints)
+                // Incident read – authenticated users
                 .requestMatchers(HttpMethod.GET,  "/api/incidents/**").authenticated()
 
-                // Status-change / admin actions
-                .requestMatchers(HttpMethod.PATCH, "/api/incidents/**").hasRole("ADMIN")
+                // Citizen rating
+                .requestMatchers(HttpMethod.POST, "/api/incidents/*/rate").hasRole("CITIZEN")
+                .requestMatchers(HttpMethod.GET, "/api/incidents/check-duplicate").hasRole("CITIZEN")
+
+                // Department repair workflow
+                .requestMatchers(HttpMethod.POST, "/api/incidents/*/department-fix").hasRole("DEPARTMENT")
+
+                // Admin review / assignment / status
+                .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/reject").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/status").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/assign").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/department-fix/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/incidents/**").hasRole("ADMIN")
 
-                // Admin-only stats / heatmap
+                // Admin-only stats / heatmap / PDF reports
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                // Support chat – authenticated citizens and admins
+                .requestMatchers("/api/support/**").authenticated()
 
                 // Gamification (citizens)
                 .requestMatchers("/api/gamification/**").hasRole("CITIZEN")

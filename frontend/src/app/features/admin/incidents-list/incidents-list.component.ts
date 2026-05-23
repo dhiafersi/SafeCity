@@ -1,18 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } from '../../../core/services/incident.service';
+import { ReportService } from '../../../core/services/report.service';
 
 @Component({
 // ... (omitting template and styles for brevity in my thought, but tool call needs exact match)
   selector: 'app-incidents-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="incidents-page">
       <div class="page-header">
         <h1>📊 Incident Management</h1>
         <span class="total-badge">{{ totalElements }} total</span>
+        <button class="btn-report" (click)="downloadWeeklyReport()" [disabled]="exportingReport">
+          {{ exportingReport ? 'Preparing PDF...' : 'Weekly PDF' }}
+        </button>
       </div>
 
 
@@ -22,7 +27,10 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
           <option value="">All Statuses</option>
           <option value="PENDING">Pending</option>
           <option value="VALIDATED">Validated</option>
+          <option value="ASSIGNED">Assigned</option>
+          <option value="FIX_SUBMITTED">Fix Submitted</option>
           <option value="RESOLVED">Resolved</option>
+          <option value="REJECTED">Rejected</option>
         </select>
         <select [(ngModel)]="filterGovernorate" (ngModelChange)="onGovernorateChange()" class="filter-select">
           <option value="">All Gouvernorats</option>
@@ -82,8 +90,8 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
                           [disabled]="updating === inc.id"
                           title="Validate">✅</button>
                   <button class="btn-status resolve"
-                          *ngIf="inc.status !== 'RESOLVED'"
-                          (click)="changeStatus(inc, 'RESOLVED')"
+                          *ngIf="inc.status === 'FIX_SUBMITTED'"
+                          (click)="approveFix(inc)"
                           [disabled]="updating === inc.id"
                           title="Resolve">🏁</button>
                   <button class="btn-status pending-btn"
@@ -91,6 +99,9 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
                           (click)="changeStatus(inc, 'PENDING')"
                           [disabled]="updating === inc.id"
                           title="Reset to Pending">↩️</button>
+                  <a class="btn-open"
+                     [routerLink]="['/admin/incidents', inc.id]"
+                     title="Open details">Open</a>
                   <button class="btn-delete"
                           (click)="deleteIncident(inc)"
                           [disabled]="updating === inc.id"
@@ -143,6 +154,12 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
       background:rgba(79,195,247,.08); color:#4fc3f7; cursor:pointer; font-size:.85rem; transition:.2s;
     }
     .btn-refresh:hover { background:rgba(79,195,247,.18); }
+    .btn-report {
+      margin-left:auto; padding:.45rem .9rem; border-radius:8px;
+      border:1px solid rgba(129,199,132,.35); background:rgba(129,199,132,.1);
+      color:#c8e6c9; cursor:pointer; font-size:.82rem; font-weight:600;
+    }
+    .btn-report:disabled { opacity:.55; cursor:wait; }
 
     .table-wrapper { overflow-x:auto; border-radius:12px; border:1px solid rgba(255,255,255,.08); }
     .loading, .empty { padding:2rem; text-align:center; color:#888; }
@@ -175,7 +192,10 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
     }
     .status-chip.pending   { background:rgba(255,193,7,.15);  color:#ffca28; border:1px solid rgba(255,193,7,.25); }
     .status-chip.validated { background:rgba(129,199,132,.15); color:#81c784; border:1px solid rgba(129,199,132,.25); }
+    .status-chip.assigned { background:rgba(255,202,40,.15); color:#ffca28; border:1px solid rgba(255,202,40,.25); }
+    .status-chip.fix_submitted { background:rgba(79,195,247,.15); color:#4fc3f7; border:1px solid rgba(79,195,247,.25); }
     .status-chip.resolved  { background:rgba(79,195,247,.15);  color:#4fc3f7; border:1px solid rgba(79,195,247,.25); }
+    .status-chip.rejected  { background:rgba(239,83,80,.15);  color:#ef5350; border:1px solid rgba(239,83,80,.25); }
 
     .ai-tag { color:#ce93d8; display:flex; flex-direction:column; font-size:.78rem; }
     .ai-tag small { color:#888; font-size:.7rem; }
@@ -186,6 +206,11 @@ import { IncidentService, IncidentResponse, StatusUpdateRequest, PageResponse } 
     .btn-status, .btn-delete {
       padding:.3rem .5rem; border:none; border-radius:6px;
       cursor:pointer; font-size:.9rem; transition:.15s; background:transparent;
+    }
+    .btn-open {
+      display:inline-flex; align-items:center; padding:.25rem .5rem; border-radius:6px;
+      border:1px solid rgba(79,195,247,.25); color:#9bdcf8; text-decoration:none;
+      font-size:.75rem; background:rgba(79,195,247,.08);
     }
     .btn-status:hover:not(:disabled) { transform:scale(1.15); }
     .btn-status:disabled, .btn-delete:disabled { opacity:.4; cursor:not-allowed; }
@@ -236,8 +261,9 @@ export class IncidentsListComponent implements OnInit {
 
   toastMsg  = '';
   toastType = 'success';
+  exportingReport = false;
 
-  constructor(private incidentService: IncidentService) {}
+  constructor(private incidentService: IncidentService, private reportService: ReportService) {}
 
   ngOnInit(): void {
     this.loadIncidents();
@@ -359,6 +385,24 @@ export class IncidentsListComponent implements OnInit {
     });
   }
 
+  approveFix(inc: IncidentResponse): void {
+    this.updating = inc.id;
+
+    this.incidentService.approveDepartmentFix(inc.id).subscribe({
+      next: (updated: IncidentResponse) => {
+        const idx = this.incidents.findIndex(i => i.id === updated.id);
+        if (idx > -1) this.incidents[idx] = updated;
+        this.applyFilters();
+        this.updating = null;
+        this.showToast(`Incident #${inc.id} marked as resolved`, 'success');
+      },
+      error: () => {
+        this.updating = null;
+        this.showToast('Failed to approve fix', 'error');
+      }
+    });
+  }
+
   deleteIncident(inc: IncidentResponse): void {
     if (!confirm(`Delete incident #${inc.id} "${inc.title}"?`)) return;
     this.updating = inc.id;
@@ -373,6 +417,27 @@ export class IncidentsListComponent implements OnInit {
       error: () => {
         this.updating = null;
         this.showToast('Failed to delete incident', 'error');
+      }
+    });
+  }
+
+  downloadWeeklyReport(): void {
+    this.exportingReport = true;
+    const to = new Date();
+    const from = new Date();
+    from.setDate(to.getDate() - 7);
+    const fromIso = from.toISOString().slice(0, 10);
+    const toIso = to.toISOString().slice(0, 10);
+
+    this.reportService.downloadPeriodReport(fromIso, toIso).subscribe({
+      next: blob => {
+        this.reportService.saveBlob(blob, `safecity-weekly-${fromIso}-${toIso}.pdf`);
+        this.exportingReport = false;
+        this.showToast('Weekly PDF report downloaded', 'success');
+      },
+      error: () => {
+        this.exportingReport = false;
+        this.showToast('Failed to export PDF report', 'error');
       }
     });
   }

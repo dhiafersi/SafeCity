@@ -31,6 +31,9 @@ import { AuthService } from './core/services/auth.service';
           <li *ngIf="auth.hasRole('CITIZEN')">
             <a routerLink="/citizen/points" routerLinkActive="active">⭐ Points</a>
           </li>
+          <li *ngIf="auth.hasRole('CITIZEN')">
+            <a routerLink="/citizen/support" routerLinkActive="active">Support</a>
+          </li>
           <li *ngIf="auth.hasRole('ADMIN')">
             <a routerLink="/admin/dashboard" routerLinkActive="active">🗺️ Map Dashboard</a>
           </li>
@@ -40,19 +43,25 @@ import { AuthService } from './core/services/auth.service';
           <li *ngIf="auth.hasRole('ADMIN')">
             <a routerLink="/admin/incidents" routerLinkActive="active">📋 Incidents</a>
           </li>
+          <li *ngIf="auth.hasRole('ADMIN')">
+            <a routerLink="/admin/support" routerLinkActive="active">Support</a>
+          </li>
+          <li *ngIf="auth.hasRole('DEPARTMENT')">
+            <a routerLink="/department/incidents" routerLinkActive="active">Department Queue</a>
+          </li>
         </ng-container>
       </ul>
 
       <div class="navbar-user">
         <ng-container *ngIf="auth.isLoggedIn(); else loginBlock">
           <span class="username">👤 {{ auth.getUsername() }}</span>
-          <span class="role-badge" [class.admin]="auth.hasRole('ADMIN')">
-            {{ auth.hasRole('ADMIN') ? 'Admin' : 'Citizen' }}
+          <span class="role-badge" [class.admin]="auth.hasRole('ADMIN')" [class.department]="auth.hasRole('DEPARTMENT')">
+            {{ auth.hasRole('ADMIN') ? 'Admin' : (auth.hasRole('DEPARTMENT') ? 'Department' : 'Citizen') }}
           </span>
           <button class="btn-logout" (click)="auth.logout()">Logout</button>
         </ng-container>
         <ng-template #loginBlock>
-          <button class="btn-login" (click)="auth.login()">Sign in</button>
+          <a class="btn-login" routerLink="/login">Sign in</a>
         </ng-template>
       </div>
     </nav>
@@ -100,8 +109,10 @@ import { AuthService } from './core/services/auth.service';
       letter-spacing:.06em;
     }
     .role-badge.admin { background:#111c4e; color:#90caf9; }
+    .role-badge.department { background:#3a2a10; color:#ffd180; }
 
     .btn-login, .btn-logout {
+      display:inline-flex; align-items:center; justify-content:center; text-decoration:none;
       padding:.42rem 1.05rem; border:none; border-radius:999px;
       font-size:.85rem; cursor:pointer; transition:.18s ease-out;
     }

@@ -22,6 +22,12 @@
         "description": "An administrator who can manage incidents and view the analytics dashboard",
         "composite": false,
         "clientRole": false
+      },
+      {
+        "name": "DEPARTMENT",
+        "description": "A municipal department user who receives assigned incidents and submits proof of repair",
+        "composite": false,
+        "clientRole": false
       }
     ]
   },
@@ -56,6 +62,20 @@
             "claim.name": "roles",
             "jsonType.label": "String",
             "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "department-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "department",
+            "claim.name": "department",
+            "jsonType.label": "String",
             "userinfo.token.claim": "true",
             "id.token.claim": "true",
             "access.token.claim": "true"
@@ -107,6 +127,44 @@
         }
       ],
       "realmRoles": ["ADMIN"]
+    },
+    {
+      "username": "roads1",
+      "email": "roads1@safecity.local",
+      "firstName": "Roads",
+      "lastName": "Department",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "department": ["Roads"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "roads123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["DEPARTMENT"]
+    },
+    {
+      "username": "lighting1",
+      "email": "lighting1@safecity.local",
+      "firstName": "Lighting",
+      "lastName": "Department",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "department": ["Lighting"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "lighting123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["DEPARTMENT"]
     }
   ]
 }

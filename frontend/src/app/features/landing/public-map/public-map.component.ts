@@ -15,6 +15,7 @@ import { environment } from '../../../../environments/environment';
 import { GamificationService, CitizenPointsResponse } from '../../../core/services/gamification.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Observable } from 'rxjs';
+import { TransparencyService, TransparencyStats } from '../../../core/services/transparency.service';
 
 @Component({
   selector: 'app-public-map',
@@ -72,6 +73,31 @@ import { Observable } from 'rxjs';
         <div *ngIf="!leaderboardLoading && leaderboard.length === 0" class="lb-empty">
           No contributors yet – be the first to report.
         </div>
+      </aside>
+
+      <aside class="transparency-card">
+        <h2>Public Transparency</h2>
+        <div *ngIf="transparencyLoading" class="lb-loading">Loading city stats...</div>
+        <ng-container *ngIf="!transparencyLoading && transparency">
+          <div class="transparency-grid">
+            <div>
+              <span class="label">Resolved</span>
+              <strong>{{ transparency.resolvedCount }}</strong>
+            </div>
+            <div>
+              <span class="label">Overdue</span>
+              <strong class="warn">{{ transparency.overdueCount }}</strong>
+            </div>
+            <div>
+              <span class="label">Avg. hours</span>
+              <strong>{{ transparency.averageResolutionHours | number:'1.0-1' }}</strong>
+            </div>
+            <div>
+              <span class="label">Rating</span>
+              <strong>{{ transparency.averageCitizenRating | number:'1.1-1' }}/5</strong>
+            </div>
+          </div>
+        </ng-container>
       </aside>
 
       <!-- Incident Details Panel (left side) -->
@@ -239,6 +265,24 @@ import { Observable } from 'rxjs';
       margin:0 0 .25rem;
       font-size:.95rem;
     }
+    .transparency-card {
+      position:absolute;
+      right:1.5rem;
+      bottom:1.5rem;
+      width:260px;
+      padding:1rem 1.1rem;
+      border-radius:14px;
+      background:rgba(10,10,20,.92);
+      border:1px solid rgba(129,199,132,.45);
+      box-shadow:0 20px 50px rgba(0,0,0,.75);
+      font-size:.85rem;
+      z-index:1000;
+    }
+    .transparency-card h2 { margin:0 0 .7rem; font-size:.95rem; }
+    .transparency-grid { display:grid; grid-template-columns:1fr 1fr; gap:.7rem; }
+    .transparency-grid div { display:flex; flex-direction:column; gap:.1rem; }
+    .transparency-grid strong { color:#c8e6c9; font-size:1rem; }
+    .transparency-grid .warn { color:#ffca28; }
     .leaderboard-card .subtitle {
       margin:0 0 .6rem;
       font-size:.75rem;
@@ -388,6 +432,9 @@ import { Observable } from 'rxjs';
         margin:0.5rem auto 0;
         width:90vw;
       }
+      .transparency-card {
+        display:none;
+      }
       .incident-details-card {
         left:50%;
         transform:translateX(-50%);
@@ -412,6 +459,8 @@ export class PublicMapComponent implements AfterViewInit {
 
   leaderboard: CitizenPointsResponse[] = [];
   leaderboardLoading = true;
+  transparency?: TransparencyStats;
+  transparencyLoading = true;
 
   currentGovernorate = 'Tunisia';
 
@@ -459,7 +508,13 @@ export class PublicMapComponent implements AfterViewInit {
     return this.authService.loginState$;
   }
 
-  constructor(private http: HttpClient, private gamificationService: GamificationService, private authService: AuthService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private http: HttpClient,
+    private gamificationService: GamificationService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef,
+    private transparencyService: TransparencyService
+  ) {}
 
   ngAfterViewInit(): void {
     this.initMap();
@@ -520,6 +575,16 @@ export class PublicMapComponent implements AfterViewInit {
       error: () => {
         this.leaderboard = [];
         this.leaderboardLoading = false;
+      }
+    });
+
+    this.transparencyService.getStats().subscribe({
+      next: stats => {
+        this.transparency = stats;
+        this.transparencyLoading = false;
+      },
+      error: () => {
+        this.transparencyLoading = false;
       }
     });
   }

@@ -1,0 +1,100 @@
+% ==============================================================================
+% FICHIER : chapitre3.tex
+% Description : Chapitre 3 (Sprint 0) : Architecture logicielle et Framework de développement
+% Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
+% Organisme d'accueil : HRMAPS
+% ==============================================================================
+
+\chapter[Sprint 0 : Architecture et Outils]{Sprint 0 : Architecture logicielle et Framework de développement}
+
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+Le Sprint 0 constitue le point de départ technique de notre projet de développement. Il a pour but de définir les choix d'architecture logicielle, de préparer l'infrastructure réseau et sécurité, d'harmoniser les outils de développement et de configurer l'ensemble des environnements matériels et logiciels. Ce chapitre présente le Backlog du Sprint 0, détaille la vue architecturale de \textit{SafeCity-Connect} (comprenant l'architecture de sécurité OAuth2/OIDC) et dresse l'état des outils et frameworks retenus pour la réalisation du projet.
+
+% ------------------------------------------------------------------------------
+% 1. BACKLOG SPRINT 0
+% ------------------------------------------------------------------------------
+\section{Backlog Sprint 0}
+Le Sprint 0 vise à poser les jalons technologiques indispensables avant d'entamer les sprints de développement fonctionnels. Ses objectifs opérationnels se résument à :
+\begin{itemize}
+    \item \textbf{Configurer le dépôt Git} et le workflow de branchement de l'équipe.
+    \item \textbf{Orchestrer l'infrastructure locale} via Docker et Docker Compose (base de données, Keycloak, microservice IA).
+    \item \textbf{Initialiser les projets squelettes} (Backend Spring Boot, Web Admin Angular, et App Mobile Flutter).
+    \item \textbf{Valider l'interfaçage initial} entre tous ces systèmes.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% 2. VUE ARCHITECTURALE DU SYSTÈME
+% ------------------------------------------------------------------------------
+\section{Vue architecturale du système}
+
+\subsection{Architecture globale du système}
+Pour garantir la flexibilité, le découplage des responsabilités et la robustesse de notre plateforme, nous avons conçu une architecture client-serveur multiniveaux articulée autour de 5 couches interdépendantes :
+\begin{enumerate}
+    \item \textbf{Le Client Web (Angular 18)} : Fournit la console d'administration municipale pour le suivi de la Heatmap, la modération, la gestion des rôles Keycloak et les exports analytiques.
+    \item \textbf{Le Client Mobile (Flutter)} : L'application mobile multiplateforme destinée aux citoyens (signalement avec photo, commentaires, statut de résolution, notation des correctifs) et aux agents techniques (visualisation des missions et transmission de la photo preuve de fixation).
+    \item \textbf{Le Serveur de Sécurité (Keycloak)} : Centralise l'authentification unifiée (SSO) et le contrôle d'accès basé sur les rôles.
+    \item \textbf{L'API Gateway / Serveur Applicatif (Spring Boot 3.2)} : Gère les contrôles métiers, les services d'alertes e-mail et coordonne les flux de données.
+    \item \textbf{La Base de Données (PostgreSQL / PostGIS)} : Assure le stockage relationnel et l'indexation cartographique spatiale native.
+    \item \textbf{Le Microservice d'IA (Python YOLO)} : Traite l'analyse visuelle des photos chargées.
+\end{enumerate}
+
+La figure \ref{fig:schema_architecture} représente graphiquement cette organisation système.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 6cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure : Schéma d'Architecture Système Globale]}\hss}\vfill}}
+    \caption{Architecture globale de SafeCity-Connect}
+    \label{fig:schema_architecture}
+\end{figure}
+
+\subsection{Architecture logicielle du système}
+L'architecture de sécurité repose sur les standards de l'industrie pour les applications web monopages (SPA) :
+\begin{itemize}
+    \item \textbf{OAuth2 et OpenID Connect (OIDC)} : protocoles de référence pour déléguer l'authentification et l'autorisation de manière sécurisée.
+    \item \textbf{Flux PKCE (Proof Key for Code Exchange)} : Utilisé lors de l'authentification côté frontend Angular pour interagir de manière ultra-sécurisée avec Keycloak sans requérir le stockage d'un secret client dans le code du navigateur.
+    \item \textbf{Validation JWT} : Le frontend transmet le jeton d'accès JWT dans l'en-tête HTTP \texttt{Authorization: Bearer <JWT>} à chaque appel API. Le backend Spring Boot valide ce jeton cryptographiquement à l'aide des clés publiques de Keycloak, garantissant l'intégrité et la confidentialité des requêtes.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% 3. PRÉSENTATION DES OUTILS DE DÉVELOPPEMENT
+% ------------------------------------------------------------------------------
+\section{Présentation des outils de développement}
+
+\subsection{Environnement Matériel}
+Le développement et les tests locaux ont été menés sur des postes de travail équipés de processeurs multicœurs (Intel Core i7, 16 Go de RAM, disques SSD rapides) indispensables pour exécuter simultanément les multiples conteneurs Docker (Keycloak, PostgreSQL, Spring Boot, Angular, YOLO AI).
+
+\subsection{Environnement Logiciel}
+L'environnement logiciel comprend les outils de productivité et de conteneurisation suivants :
+\begin{itemize}
+    \item \textbf{Système d'Exploitation} : Windows 11 Professionnel.
+    \item \textbf{IDEs} : \textbf{IntelliJ IDEA Ultimate} (développement Java/Spring Boot) et \textbf{Visual Studio Code / Android Studio} (développement TypeScript/Angular et mobile Flutter).
+    \item \textbf{Orchestration Docker \& Docker Compose} : Essentiel pour packager et déployer instantanément tous nos services dans des conteneurs isolés et reproductibles.
+    \item \textbf{Gestion des Versions} : \textbf{Git} combiné à l'hébergeur \textbf{GitHub}.
+\end{itemize}
+
+\subsection{Langage et Framework de développement}
+Le tableau \ref{tab:sprint0_technologies} résume les frameworks et technologies retenus :
+
+\begin{table}[H]
+    \centering
+    \caption{Frameworks et Technologies choisis}
+    \label{tab:sprint0_technologies}
+    \vspace{0.3cm}
+    \begin{tabularx}{\textwidth}{l X}
+        \toprule
+        \textbf{Framework / Langage} & \textbf{Justification du Choix} \\
+        \midrule
+        \textbf{Java 21} & Version LTS offrant des performances accrues (Virtual Threads, Pattern Matching). \\
+        \textbf{Spring Boot 3.2} & Framework backend de référence en Java, gérant la sécurité (OAuth2) et Spring Data JPA. \\
+        \textbf{Angular 18} & Framework web robuste pour le dashboard d'administration réactif de la municipalité. \\
+        \textbf{Flutter 3.x / Dart} & Framework mobile de Google pour compiler nativement l'application citoyen et agent de terrain sur Android et iOS. \\
+        \textbf{PostgreSQL / PostGIS} & SGBD relationnel robuste doté de la meilleure extension spatiale pour stocker la géo-localisation. \\
+        \textbf{Python / YOLO} & Écosystème leader pour la détection et classification automatique d'images. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
+Le Sprint 0 s'est achevé avec succès. Nous avons défini l'architecture multiniveau sécurisée de \textit{SafeCity-Connect}, installé les environnements de développement et validé l'empilement technologique choisi. Forts de cette infrastructure technique opérationnelle, nous pouvons aborder le premier sprint fonctionnel présenté dans le chapitre suivant, dédié à la gestion des comptes, de l'authentification unifiée et de la sécurité des utilisateurs.

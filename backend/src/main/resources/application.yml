@@ -62,6 +62,12 @@ safecity:
     simulation-enabled: ${SAFECITY_AI_SIMULATION:false}
     service-url: ${SAFECITY_AI_SERVICE_URL:http://localhost:8000}
     model: ${SAFECITY_AI_MODEL:openai/clip-vit-base-patch32}
+  sla:
+    hours: ${SAFECITY_SLA_HOURS:72}
+  reports:
+    admin-email: ${REPORT_ADMIN_EMAIL:admin1@safecity.local}
+    schedule-enabled: ${REPORT_SCHEDULE_ENABLED:true}
+    schedule-cron: ${REPORT_SCHEDULE_CRON:0 0 8 * * MON}
 
 management:
   endpoints:

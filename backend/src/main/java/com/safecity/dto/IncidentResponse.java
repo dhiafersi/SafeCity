@@ -30,4 +30,15 @@ public class IncidentResponse {
     private LocalDateTime updatedAt;
     private LocalDateTime validatedAt;
     private LocalDateTime resolvedAt;
+    private String rejectionReason;
+    private String assignedDepartment;
+    private LocalDateTime departmentAssignedAt;
+    private String departmentFixPhotoPath;
+    private LocalDateTime departmentFixSubmittedAt;
+    private String departmentReviewReason;
+    private LocalDateTime slaDeadlineAt;
+    private Long duplicateOfIncidentId;
+    private Integer citizenRating;
+    private LocalDateTime ratedAt;
+    private boolean slaOverdue;
 }

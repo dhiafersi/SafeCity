@@ -1,0 +1,178 @@
+% ==============================================================================
+% FICHIER : chapitre4.tex
+% Description : Chapitre 4 (Sprint 1) : Inscription, Authentification, Gestion profil
+% Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
+% Organisme d'accueil : HRMAPS
+% ==============================================================================
+
+\chapter[Sprint 1 : Authentification et Profil]{Sprint 1 : Inscription, Authentification, Gestion profil et réinitialiser mot de passe}
+
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+La gestion d'identité et la sécurité constituent le premier pilier fonctionnel de la plateforme \textit{SafeCity-Connect}. L'objectif du Sprint 1 est de concevoir et réaliser un système d'authentification robuste et unifié, permettant aux citoyens de s'inscrire, de se connecter, de gérer leurs données de profil et de réinitialiser leur mot de passe en toute sécurité. Ce chapitre détaille l'analyse fonctionnelle, les diagrammes de séquence UML, le diagramme de classes spécifique au sprint, et la réalisation technique s'appuyant sur Keycloak et Spring Security.
+
+% ------------------------------------------------------------------------------
+% 1. BACKLOG SPRINT 1
+% ------------------------------------------------------------------------------
+\section{BACKLOG Sprint 1}
+Le Backlog du Sprint 1 regroupe l'ensemble des récits utilisateurs associés à la gestion d'identité :
+\begin{itemize}
+    \item \textbf{US02 -- Inscription et Connexion SSO} : Permettre à un citoyen de créer un compte et de se connecter de manière centralisée.
+    \item \textbf{US03 -- Gestion de profil et Mot de passe oublié} : Permettre à l'utilisateur connecté de modifier ses données personnelles et de réinitialiser son mot de passe en cas de perte via e-mail.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% 2. ANALYSE ET SPÉCIFICATION DES BESOINS
+% ------------------------------------------------------------------------------
+\section{Analyse et spécification des besoins}
+
+\subsection{Diagramme de cas d'utilisation}
+La figure \ref{fig:uc_sprint1} modélise les cas d'utilisation spécifiques aux comptes utilisateurs.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure : Diagramme de Cas d'Utilisation -- Sprint 1 (Gestion Comptes)]}\hss}\vfill}}
+    \caption{Diagramme de cas d'utilisation : Sprint 1}
+    \label{fig:uc_sprint1}
+\end{figure}
+
+\subsection{Description textuelle}
+Voici la description textuelle du cas d'utilisation principal \textbf{« S'authentifier »} :
+\begin{itemize}
+    \item \textbf{Acteurs} : Citoyen, Administrateur.
+    \item \textbf{Préconditions} : L'acteur possède un compte enregistré dans le système.
+    \item \textbf{Scénario nominal} :
+    \begin{enumerate}
+        \item L'utilisateur clique sur le bouton « Connexion » de l'application Angular.
+        \item L'application redirige l'utilisateur vers la page de login Keycloak sécurisée.
+        \item L'utilisateur saisit son identifiant (ou email) et son mot de passe, puis valide.
+        \item Keycloak valide les informations d'identification.
+        \item Keycloak redirige l'utilisateur vers le frontend avec un code d'autorisation.
+        \item Le frontend échange ce code contre un jeton JWT d'accès et un jeton de rafraîchissement.
+        \item L'utilisateur accède à son espace personnel.
+    \end{enumerate}
+    \item \textbf{Scénarios alternatifs} : En cas d'identifiants incorrects, un message d'erreur s'affiche sur la mire Keycloak et l'authentification est rejetée.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% 3. PRÉSENTATION ÉCRAN IHM
+% ------------------------------------------------------------------------------
+\section{Présentation Écran IHM}
+Les interfaces utilisateurs de ce sprint ont été conçues pour être fluides et claires, respectant la charte graphique moderne et adaptative de \textit{SafeCity-Connect}.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 6cm{\vfill\hbox to \textwidth{\hss\textbf{[Capture d'écran : Interface d'Authentification Keycloak SSO personnalisée]}\hss}\vfill}}
+    \caption{Mire de connexion sécurisée (Keycloak SSO)}
+    \label{fig:ihm_login}
+\end{figure}
+
+% ------------------------------------------------------------------------------
+% 4. DIAGRAMME DE SÉQUENCE
+% ------------------------------------------------------------------------------
+\section{Diagramme de séquence}
+Cette section illustre la cinématique des messages échangés entre le client Angular, Keycloak, le backend Spring Boot et la base de données PostgreSQL pour les différents cas d'utilisation.
+
+\subsection{Diagramme de séquence « Authentification »}
+La figure \ref{fig:seq_auth} décrit le flux d'authentification s'appuyant sur le protocole OpenID Connect et le protocole PKCE.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 6cm{\vfill\hbox to \textwidth{\hss\textbf{[Diagramme de Séquence UML : Authentification PKCE OIDC]}\hss}\vfill}}
+    \caption{Diagramme de séquence : Authentification unifiée}
+    \label{fig:seq_auth}
+\end{figure}
+
+\subsection{Diagramme de séquence « Gestion profil »}
+La figure \ref{fig:seq_profile} illustre le cas où l'utilisateur connecté met à jour son profil (ex : prénom, nom, email).
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Diagramme de Séquence UML : Mise à jour du Profil]}\hss}\vfill}}
+    \caption{Diagramme de séquence : Gestion du profil utilisateur}
+    \label{fig:seq_profile}
+\end{figure}
+
+\subsection{Diagramme de séquence « Inscription »}
+La figure \ref{fig:seq_inscription} montre comment le compte citoyen est créé dans Keycloak et synchronisé en base de données.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Diagramme de Séquence UML : Inscription Citoyenne et Synchro BDD]}\hss}\vfill}}
+    \caption{Diagramme de séquence : Inscription d'un nouveau compte}
+    \label{fig:seq_inscription}
+\end{figure}
+
+\subsection{Diagramme de séquence « mot de passe oublier »}
+La figure \ref{fig:seq_pwd_forget} montre le processus de réinitialisation sécurisé par envoi d'un e-mail contenant un lien temporaire signé.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Diagramme de Séquence UML : Mot de passe oublié et Réinitialisation]}\hss}\vfill}}
+    \caption{Diagramme de séquence : Réinitialisation du mot de passe}
+    \label{fig:seq_pwd_forget}
+\end{figure}
+
+% ------------------------------------------------------------------------------
+% 5. DIAGRAMME DE CLASSES
+% ------------------------------------------------------------------------------
+\section{Diagramme de classes}
+La structure de données de ce sprint gère l'utilisateur et son profil. Le diagramme de classes est illustré dans la figure \ref{fig:class_sprint1}.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure : Diagramme de Classes -- Sprint 1 (Gestion Utilisateurs)]}\hss}\vfill}}
+    \caption{Diagramme de classes du Sprint 1}
+    \label{fig:class_sprint1}
+\end{figure}
+
+% ------------------------------------------------------------------------------
+% 6. RÉALISATION
+% ------------------------------------------------------------------------------
+\section{Réalisation}
+
+\subsection{Création du schéma « user »}
+La table correspondante dans notre base de données relationnelle est \texttt{table_user_profile}. Elle est déclarée avec les attributs \texttt{id} (UUID hérité de Keycloak), \texttt{username}, \texttt{email}, et \texttt{impact_points} (valeur initiale à 0).
+
+\subsection{Sécurité}
+La sécurité est orchestrée en couplant notre serveur d'identité Keycloak avec la configuration de sécurité Spring Security de notre application backend.
+
+\paragraph{Configuration Keycloak}
+Nous avons créé un Realm nommé \texttt{safecity} au sein de Keycloak. Dans ce Realm, trois rôles de base sont configurés :
+\begin{itemize}
+    \item \textbf{CITIZEN} : Attribué par défaut à tout utilisateur s'inscrivant via le formulaire public.
+    \item \textbf{ADMIN} : Attribué manuellement aux gestionnaires municipaux.
+    \item \textbf{DEPARTMENT} : Attribué aux agents techniques et départements municipaux chargés des travaux.
+\end{itemize}
+Nous avons également configuré un client public \texttt{safecity-frontend} supportant le flux OAuth2 PKCE avec redirections autorisées vers l'adresse \texttt{http://localhost:4200}.
+
+\paragraph{Configuration Spring Security}
+Côté Spring Boot 3.2, nous configurons l'application en tant que serveur de ressources OAuth2 (\textit{OAuth2 Resource Server}) dans une classe de configuration de sécurité :
+\begin{verbatim}
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/public/**").permitAll()
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            .requestMatchers("/api/department/**").hasRole("DEPARTMENT")
+            .requestMatchers("/api/citizen/**").hasRole("CITIZEN")
+            .anyRequest().authenticated()
+        )
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+    return http.build();
+}
+\end{verbatim}
+
+\subsection{Création des web services « API Endpoint »}
+Les services web exposés sont développés sous forme de contrôleurs REST Spring Boot. Par exemple, le contrôleur \texttt{UserProfileController} expose les routes permettant de récupérer et de modifier les données de profil :
+\begin{itemize}
+    \item \textbf{GET} \texttt{/api/citizen/profile} : Récupérer les informations de l'utilisateur connecté (id extrait à partir du JWT).
+    \item \textbf{PUT} \texttt{/api/citizen/profile} : Mettre à jour les informations (nom, prénom) et synchroniser avec Keycloak via l'API d'administration Keycloak.
+\end{itemize}
+
+\subsection{Enchaînement des interfaces réalisées}
+Lors de l'utilisation réelle, un utilisateur non authentifié arrivant sur l'application Angular est immédiatement redirigé vers l'IHM de Keycloak. Dès la saisie d'identifiants valides, l'enchaînement des interfaces le ramène vers la page d'accueil d'historique de signalement citoyen où ses informations de profil (nom, points d'impact) s'affichent de manière personnalisée.
+
+\section*{Conclusion}
+Le Sprint 1 s'est achevé avec la réalisation complète de notre brique de sécurité et de gestion d'identité. Grâce à l'intégration robuste de Keycloak et Spring Security, la plateforme \textit{SafeCity-Connect} garantit la confidentialité des données et sépare hermétiquement les fonctionnalités citoyennes et d'administration. Le chapitre suivant présentera le Sprint 2, le cœur de l'expérience citoyenne, centré sur la gestion des signalements d'incidents sur le terrain assistée par l'intelligence artificielle.

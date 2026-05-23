@@ -42,6 +42,30 @@ public class EmailNotificationService {
     private String emailDomain;
 
     @Async
+    public void sendReportEmail(String toEmail, String subject, byte[] pdfBytes, String filename) {
+        if (toEmail == null || toEmail.isBlank()) {
+            return;
+        }
+        if (!"smtp".equalsIgnoreCase(emailProvider)) {
+            log.debug("PDF report email requires SMTP provider");
+            return;
+        }
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText("<p>Please find the attached SafeCity incident report.</p>", true);
+            helper.addAttachment(filename, () -> new java.io.ByteArrayInputStream(pdfBytes), "application/pdf");
+            mailSender.send(message);
+            log.info("Sent PDF report to {}", toEmail);
+        } catch (Exception e) {
+            log.warn("Failed to send PDF report: {}", e.getMessage(), e);
+        }
+    }
+
+    @Async
     public void sendIncidentStatusChange(Incident incident, IncidentStatus previousStatus) {
         if (incident == null || incident.getReporterEmail() == null || incident.getReporterEmail().isBlank()) {
             log.debug("Skipping email notification: no reporter email available for incident id={}", incident != null ? incident.getId() : null);
@@ -191,6 +215,8 @@ public class EmailNotificationService {
             case VALIDATED -> "Your report has been confirmed by the administration and is now marked as <strong>Validated</strong>.";
             case RESOLVED -> "Your report has been resolved and the issue should no longer be active.";
             case PENDING -> "Your report is pending review by the SafeCity team.";
+            case REJECTED -> "Your report was reviewed and <strong>rejected</strong>."
+                + (incident.getRejectionReason() != null ? " Reason: " + escapeHtml(incident.getRejectionReason()) : "");
             default -> "The status of your report has been updated.";
         };
     }

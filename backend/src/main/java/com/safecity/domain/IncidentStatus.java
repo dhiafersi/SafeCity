@@ -3,5 +3,8 @@ package com.safecity.domain;
 public enum IncidentStatus {
     PENDING,
     VALIDATED,
-    RESOLVED
+    ASSIGNED,
+    FIX_SUBMITTED,
+    RESOLVED,
+    REJECTED
 }

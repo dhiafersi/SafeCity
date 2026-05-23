@@ -5,14 +5,8 @@ import { IncidentService, IncidentResponse, PageResponse } from '../../../core/s
 import { GamificationService, HeatmapPoint } from '../../../core/services/gamification.service';
 import { 
   Map as LeafletMap, 
-  LayerGroup, 
-  map as createMap, 
-  tileLayer, 
-  layerGroup, 
-  divIcon, 
-  marker 
+  LayerGroup 
 } from 'leaflet';
-import 'leaflet.heat';
 
 @Component({
   selector: 'app-dashboard',
@@ -170,20 +164,21 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private initMap(): void {
-    this.map = createMap(this.mapEl.nativeElement, {
+    const L = (window as any).L;
+    this.map = L.map(this.mapEl.nativeElement, {
       center: [36.8065, 10.1815], // Default: Tunis, Tunisia
       zoom: 12,
       zoomControl: true,
     });
 
     // Dark tile layer (CartoDB Dark Matter)
-    tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
       maxZoom: 20,
     }).addTo(this.map);
 
-    this.markersLayer = layerGroup().addTo(this.map);
+    this.markersLayer = L.layerGroup().addTo(this.map);
   }
 
   loadData(): void {
@@ -206,11 +201,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private renderMarkers(): void {
     this.markersLayer.clearLayers();
+    const L = (window as any).L;
 
     this.incidents.forEach(inc => {
       const color = this.statusColor(inc.status);
       const emoji = this.categoryIcon(inc.category);
-      const icon = divIcon({
+      const icon = L.divIcon({
         html: `<div style="
           display:flex;align-items:center;justify-content:center;
           width:22px;height:22px;border-radius:50%;
@@ -223,7 +219,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         iconAnchor: [11, 11],
       });
 
-      const m = marker([inc.latitude, inc.longitude], { icon });
+      const m = L.marker([inc.latitude, inc.longitude], { icon });
       m.bindPopup(this.buildPopup(inc), { maxWidth: 260 });
       this.markersLayer.addLayer(m);
     });

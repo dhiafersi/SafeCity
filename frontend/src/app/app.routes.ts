@@ -40,6 +40,20 @@ export const routes: Routes = [
             .then(m => m.PointsComponent),
         title: 'My Impact Points – SafeCity'
       },
+      {
+        path: 'my-reports/:id',
+        loadComponent: () =>
+          import('./features/shared/incident-detail/incident-detail.component')
+            .then(m => m.IncidentDetailComponent),
+        title: 'Report Details – SafeCity'
+      },
+      {
+        path: 'support',
+        loadComponent: () =>
+          import('./features/shared/support-chat/support-chat.component')
+            .then(m => m.SupportChatComponent),
+        title: 'Support – SafeCity'
+      },
     ]
   },
   {
@@ -68,7 +82,49 @@ export const routes: Routes = [
             .then(m => m.AnalyticsDashboardComponent),
         title: 'City Analytics – SafeCity'
       },
+      {
+        path: 'incidents/:id',
+        loadComponent: () =>
+          import('./features/shared/incident-detail/incident-detail.component')
+            .then(m => m.IncidentDetailComponent),
+        title: 'Incident Details – SafeCity'
+      },
+      {
+        path: 'support',
+        loadComponent: () =>
+          import('./features/shared/support-chat/support-chat.component')
+            .then(m => m.SupportChatComponent),
+        title: 'Admin Support – SafeCity'
+      },
     ]
+  },
+  {
+    path: 'department',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['DEPARTMENT'] },
+    children: [
+      {
+        path: 'incidents',
+        loadComponent: () =>
+          import('./features/department/department-incidents/department-incidents.component')
+            .then(m => m.DepartmentIncidentsComponent),
+        title: 'Department Queue - SafeCity'
+      },
+      {
+        path: 'incidents/:id',
+        loadComponent: () =>
+          import('./features/shared/incident-detail/incident-detail.component')
+            .then(m => m.IncidentDetailComponent),
+        title: 'Assigned Incident - SafeCity'
+      },
+    ]
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/auth/login/login.component')
+        .then(m => m.LoginComponent),
+    title: 'Sign in - SafeCity'
   },
   {
     path: 'callback',

@@ -4,7 +4,7 @@ export const environment = {
   keycloak: {
     issuer: 'http://localhost:8080/realms/safecity',
     clientId: 'safecity-angular',
-    redirectUri: window.location.origin + '/',
+    redirectUri: window.location.origin + '/callback',
     responseType: 'code',
     scope: 'openid profile email',
     showDebugInformation: true,

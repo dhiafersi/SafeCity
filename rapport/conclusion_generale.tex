@@ -1,0 +1,35 @@
+% ==============================================================================
+% FICHIER : conclusion_generale.tex
+% Description : Conclusion Générale
+% Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
+% Organisme d'accueil : HRMAPS
+% ==============================================================================
+
+\chapter*{Conclusion Générale}
+\addcontentsline{toc}{chapter}{Conclusion Générale}
+
+Le travail présenté dans ce rapport s'inscrit dans le cadre du développement de la plateforme citoyenne intelligente \textbf{SafeCity-Connect}, réalisée sous la tutelle de notre organisme d'accueil \textbf{HRMAPS}. Ce projet de fin d'études a représenté pour nous un défi technologique et méthodologique captivant, visant à moderniser la gestion des infrastructures urbaines par l'implication active des citoyens et l'apport de l'intelligence artificielle.
+
+Tout au long de ce projet, nous avons suivi une démarche structurée :
+
+En premier lieu, la phase de cadrage et d'étude de l'existant a permis de cerner la problématique complexe de la réactivité municipale et du désengagement des citadins face à la dégradation de leur espace public. C'est sur ces constatations que s'est fondée notre proposition d'une plateforme connectée bidirectionnelle.
+
+En second lieu, l'analyse détaillée des besoins a permis de dégager précisément les profils des utilisateurs (Citoyens, Administrateurs communaux) et de délimiter l'ensemble des cas d'utilisation UML associés. Nous avons identifié la sécurité (via Keycloak SSO), le traitement IA (YOLO) et l'ergonomie responsive comme des exigences non fonctionnelles de premier ordre.
+
+En troisième lieu, lors de la phase de conception, nous avons conçu une architecture moderne, distribuée et hautement sécurisée en nous basant sur le protocole OAuth2 et le flux PKCE. De plus, nous avons élaboré le modèle de données géospatial PostGIS nécessaire pour stocker nativement les géométries et optimiser les calculs géographiques complexes.
+
+En quatrième lieu, la phase de réalisation a concrétisé cette étude à travers l'assemblage de notre Tech Stack : Spring Boot 3.2 pour le cœur d'API, Angular 18 pour la console d'administration web, Flutter pour l'application mobile citoyen et technique, Keycloak pour la gestion de sécurité unifiée, et le module YOLO AI. L'orchestration par Docker Compose a permis d'assurer l'homogénéité et la portabilité des services développés.
+
+Ce projet a pleinement atteint les objectifs initiaux fixés. Les citoyens disposent d'une application mobile Flutter ergonomique pour signaler en temps réel les incidents, commenter les réparations et suivre la timeline, tout en étant encouragés par les points d'impact. De leur côté, les gestionnaires profitent d'un outil de pilotage cartographique (Heatmap PostGIS) et documentaire (exports PDF/Excel) performant.
+
+\section*{Perspectives d'avenir}
+Bien que la plateforme soit pleinement opérationnelle, plusieurs axes d'évolution prometteurs peuvent être envisagés pour enrichir \textit{SafeCity-Connect} à l'avenir :
+
+\begin{itemize}
+    \item \textbf{Intégration d'un modèle d'IA de production} : Remplacer la simulation d'IA actuelle par un réseau de neurones YOLOv8/v9 entraîné spécifiquement sur des jeux de données réels de dégradations urbaines.
+    \item \textbf{Notifications Push via Firebase (FCM)} : Intégrer Firebase Cloud Messaging pour envoyer des notifications push instantanées sur l'application Flutter des citoyens à chaque étape de la timeline (ex : acceptation ou rejet motivé du correctif par l'Admin).
+    \item \textbf{Mode Hors-Ligne (Offline Sync)} : Permettre aux citoyens et aux agents techniques de capturer des incidents et photos de fixation sans connexion internet, les données étant stockées localement (SQLite/Hive) et synchronisées automatiquement dès le retour du réseau.
+    \item \textbf{Module d'optimisation de tournées} : Intégrer un algorithme d'optimisation de trajet (type pgRouting) pour tracer sur l'application mobile des agents l'itinéraire optimal de résolution des incidents affectés.
+\end{itemize}
+
+En définitive, ce Projet de Fin d'Études a constitué une opportunité exceptionnelle de mettre en pratique nos connaissances académiques acquises au sein de l'ISET Bizerte, tout en nous familiarisant avec les exigences d'une entreprise innovante comme HRMAPS. Nous espérons que \textit{SafeCity-Connect} posera les premiers jalons de la transition numérique vers des villes plus intelligentes, réactives, vertes et à l'écoute constante de leurs habitants.

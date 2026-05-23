@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IncidentService, IncidentResponse, PageResponse } from '../../../core/services/incident.service';
 
 @Component({
   selector: 'app-my-reports',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="reports-page">
       <div class="reports-container">
@@ -30,6 +31,10 @@ import { IncidentService, IncidentResponse, PageResponse } from '../../../core/s
             </div>
             <div class="ai-info" *ngIf="inc.aiCategory">
               🤖 AI: <strong>{{ inc.aiCategory }}</strong> ({{ ((inc.aiConfidence ?? 0) * 100) | number:'1.0-1' }}%)
+            </div>
+            <div class="card-actions">
+              <a [routerLink]="['/citizen/my-reports', inc.id]">Open details</a>
+              <a routerLink="/citizen/support">Contact support</a>
             </div>
           </div>
         </div>
@@ -67,6 +72,11 @@ import { IncidentService, IncidentResponse, PageResponse } from '../../../core/s
     .description { color:#aaa; font-size:.85rem; margin:0 0 .75rem; }
     .meta { display:flex; gap:1rem; font-size:.8rem; color:#777; flex-wrap:wrap; }
     .ai-info { margin-top:.5rem; font-size:.8rem; color:#ce93d8; }
+    .card-actions { display:flex; gap:.6rem; margin-top:.9rem; flex-wrap:wrap; }
+    .card-actions a {
+      padding:.35rem .7rem; border-radius:8px; border:1px solid rgba(79,195,247,.28);
+      color:#9bdcf8; background:rgba(79,195,247,.08); text-decoration:none; font-size:.8rem;
+    }
   `]
 })
 export class MyReportsComponent implements OnInit {

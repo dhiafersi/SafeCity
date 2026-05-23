@@ -1,0 +1,139 @@
+% ==============================================================================
+% FICHIER : chapitre6.tex
+% Description : Chapitre 6 (Sprint 3) : Espace Administration, Heatmap et Statistiques
+% Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
+% Organisme d'accueil : HRMAPS
+% ==============================================================================
+
+\chapter[Sprint 3 : Administration et Heatmap]{Sprint 3 : Espace Administration, Heatmap et Statistiques}
+
+\section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
+Une gestion de voirie efficace requiert des outils d'analyse puissants pour aider les décideurs municipaux à prioriser les chantiers et à suivre l'évolution des résolutions. L'objectif du Sprint 3 est de réaliser l'espace d'administration de la plateforme \textit{SafeCity-Connect}. Cet espace fournit aux administrateurs municipaux un portail web décisionnel (Angular 18) pour affecter les interventions aux départements techniques, suivre la carte thermique (\textit{Heatmap}), recevoir des alertes par e-mail lors de nouveaux signalements, et exporter des analyses hebdomadaires ou des fiches d'incidents au format PDF. Ce chapitre présente le backlog, l'analyse fonctionnelle, les modélisations UML, et l'implémentation des services de notifications, de cartographie et de génération de rapports.
+
+% ------------------------------------------------------------------------------
+% 1. BACKLOG SPRINT 3
+% ------------------------------------------------------------------------------
+\section{BACKLOG Sprint 3}
+Le Backlog du Sprint 3 cible les capacités de modération, d'analyse et d'alerte de l'administration :
+\begin{itemize}
+    \item \textbf{US06 -- Affectation aux départements (Admin)} : Permettre à l'administrateur d'affecter un incident validé à un département technique spécifique en créant une tâche d'intervention.
+    \item \textbf{US07 -- Carte thermique et Exports analytiques (Admin)} : Permettre de visualiser la Heatmap PostGIS, d'exporter le récapitulatif hebdomadaire des anomalies (Excel/CSV) et de générer un rapport PDF complet de synthèse d'un incident.
+    \item \textbf{US08 -- Alertes par E-mail (Admin)} : Configurer le service de messagerie pour avertir automatiquement l'administrateur par courriel lors de chaque nouveau signalement citoyen.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% 2. ANALYSE ET SPÉCIFICATION DES BESOINS
+% ------------------------------------------------------------------------------
+\section{Analyse et spécification des besoins}
+
+\subsection{Diagramme de cas d'utilisation}
+La figure \ref{fig:uc_sprint3} illustre les cas d'utilisation liés à l'affectation, aux alertes e-mail et aux fonctions d'export documentaires de l'Administrateur.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure : Diagramme de Cas d'Utilisation -- Sprint 3 (Administration)]}\hss}\vfill}}
+    \caption{Diagramme de cas d'utilisation : Sprint 3}
+    \label{fig:uc_sprint3}
+\end{figure}
+
+\subsection{Description textuelle}
+Voici la description textuelle du cas d'utilisation \textbf{« Exporter le rapport PDF d'un incident »} :
+\begin{itemize}
+    \item \textbf{Acteur} : Administrateur.
+    \item \textbf{Préconditions} : L'incident sélectionné possède un historique d'actions (timeline).
+    \item \textbf{Scénario nominal} :
+    \begin{enumerate}
+        \item L'administrateur consulte la fiche d'un incident sur le dashboard Angular.
+        \item Il clique sur le bouton « Exporter Rapport PDF ».
+        \item Le frontend envoie une requête vers l'API backend Spring Boot avec l'identifiant de l'incident.
+        \item Le backend extrait les données de l'incident (localisation, catégorie, dates, acteur citoyen, agent technique affecté, photos avant/après, commentaires et historique d'états de la timeline).
+        \item Le backend injecte ces données dans un template HTML via Thymeleaf, puis génère le document PDF.
+        \item Le fichier PDF est renvoyé sous forme de flux binaire au navigateur.
+        \item Le navigateur télécharge automatiquement le rapport PDF officiel.
+    \end{enumerate}
+    \item \textbf{Scénarios alternatifs} : En cas d'erreur de base de données, un message d'alerte s'affiche sur le dashboard de l'Admin et l'action est annulée.
+\end{itemize}
+
+% ------------------------------------------------------------------------------
+% 3. PRÉSENTATION ÉCRAN IHM
+% ------------------------------------------------------------------------------
+\section{Présentation écran IHM}
+L'interface de l'administrateur intègre la Heatmap et les contrôles d'export décisionnels :
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 6.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Capture d'écran : Console Admin Web -- Heatmap PostGIS et Menu d'Export PDF/Excel]}\hss}\vfill}}
+    \caption{Interface du Tableau de bord d'Administration}
+    \label{fig:ihm_admin}
+\end{figure}
+
+% ------------------------------------------------------------------------------
+% 4. DIAGRAMME DE SÉQUENCE
+% ------------------------------------------------------------------------------
+\section{Diagramme de séquence}
+La figure \ref{fig:seq_sprint3} montre les cinématiques d'appels lors de l'exportation d'une fiche d'anomalie au format PDF et de l'envoi de l'alerte e-mail lors de la création de l'incident.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 7.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Diagramme de Séquence UML : Envoi d'Alerte E-mail et Export de Rapport PDF]}\hss}\vfill}}
+    \caption{Diagramme de séquence : Notifications et Exports}
+    \label{fig:seq_sprint3}
+\end{figure}
+
+% ------------------------------------------------------------------------------
+% 5. DIAGRAMME DE CLASSES
+% ------------------------------------------------------------------------------
+\section{Diagramme de classes}
+La figure \ref{fig:class_sprint3} présente le modèle structurel enrichi avec les relations de Département et de logs de notifications.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure : Diagramme de Classes -- Sprint 3 (Admin \& Services tiers)]}\hss}\vfill}}
+    \caption{Diagramme de classes du Sprint 3}
+    \label{fig:class_sprint3}
+\end{figure}
+
+% ------------------------------------------------------------------------------
+% 6. RÉALISATION
+% ------------------------------------------------------------------------------
+\section{Réalisation}
+
+\subsection{Service d'Alertes par E-mail}
+Dès qu'un citoyen soumet un signalement d'anomalie, la couche service Spring Boot intercepte l'événement de création et sollicite le composant \texttt{EmailNotificationService} (s'appuyant sur \texttt{spring-boot-starter-mail}) :
+\begin{verbatim}
+@Service
+public class EmailNotificationService {
+    @Autowired
+    private JavaMailSender mailSender;
+
+    public void sendIncidentAlertToAdmin(Incident incident) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo("admin@safecity.tn");
+        message.setSubject("🚨 SafeCity-Connect : Nouveau signalement d'incident");
+        message.setText("Un nouvel incident a été signalé !\n" +
+                        "Catégorie : " + incident.getCategory().getLabel() + "\n" +
+                        "Description : " + incident.getDescription() + "\n" +
+                        "Coordonnées : " + ST_AsText(incident.getGeom()) + "\n" +
+                        "Veuillez vous connecter pour affecter l'intervention.");
+        mailSender.send(message);
+    }
+}
+\end{verbatim}
+
+\subsection{Génération du Rapport PDF de l'Incident}
+Pour exporter la fiche d'incident en format PDF, nous utilisons la bibliothèque open-source **OpenPDF** (ou **iText**) au sein du backend. La classe \texttt{PdfExportService} génère dynamiquement un document structuré et paginé contenant :
+\begin{itemize}
+    \item L'en-tête officiel de la municipalité et le logo du projet.
+    \item La fiche descriptive de l'anomalie et ses coordonnées cartographiques.
+    \item La photo initiale de signalement et la photo preuve de fixation.
+    \item Le fil de vie historique (**Timeline**) de l'incident.
+    \item L'historique des commentaires rédigés par les citoyens.
+\end{itemize}
+
+\subsection{Export Hebdomadaire (Excel/CSV)}
+Pour l'analyse quantitative, un service d'exportation de données interroge la base de données et écrit les incidents de la semaine écoulée dans un classeur Excel en exploitant la bibliothèque **Apache POI**. L'administrateur récupère ce fichier via l'API REST :
+\texttt{GET /api/admin/incidents/export-weekly}.
+
+\section*{Conclusion}
+Le Sprint 3 dote la municipalité d'outils décisionnels et analytiques avancés. L'envoi automatique d'alertes e-mail garantit une réactivité immédiate dès le dépôt d'un signalement, tandis que l'affectation directe aux agents et les fonctionnalités d'export (Excel hebdomadaire, rapports PDF d'incidents) permettent d'archiver, de planifier et d'analyser scientifiquement l'entretien des quartiers. Le chapitre suivant traitera de l'étape de clôture par photo preuve de fixation et de la gamification.

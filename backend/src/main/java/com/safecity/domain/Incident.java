@@ -91,4 +91,34 @@ public class Incident {
 
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
+
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
+    @Column(name = "assigned_department", length = 128)
+    private String assignedDepartment;
+
+    @Column(name = "department_assigned_at")
+    private LocalDateTime departmentAssignedAt;
+
+    @Column(name = "department_fix_photo_path", length = 512)
+    private String departmentFixPhotoPath;
+
+    @Column(name = "department_fix_submitted_at")
+    private LocalDateTime departmentFixSubmittedAt;
+
+    @Column(name = "department_review_reason", columnDefinition = "TEXT")
+    private String departmentReviewReason;
+
+    @Column(name = "sla_deadline_at")
+    private LocalDateTime slaDeadlineAt;
+
+    @Column(name = "duplicate_of_incident_id")
+    private Long duplicateOfIncidentId;
+
+    @Column(name = "citizen_rating")
+    private Integer citizenRating;
+
+    @Column(name = "rated_at")
+    private LocalDateTime ratedAt;
 }

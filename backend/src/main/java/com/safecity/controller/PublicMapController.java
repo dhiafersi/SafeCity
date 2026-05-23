@@ -2,9 +2,11 @@ package com.safecity.controller;
 
 import com.safecity.dto.CitizenPointsResponse;
 import com.safecity.dto.IncidentResponse;
+import com.safecity.dto.TransparencyStatsResponse;
 import com.safecity.repository.IncidentRepository;
 import com.safecity.service.GamificationService;
 import com.safecity.service.IncidentService;
+import com.safecity.service.TransparencyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,7 @@ public class PublicMapController {
     private final IncidentService incidentService;
     private final IncidentRepository incidentRepository;
     private final GamificationService gamificationService;
+    private final TransparencyService transparencyService;
 
     /**
      * GET /api/public/incidents – paged list of incidents for the public map.
@@ -65,6 +68,14 @@ public class PublicMapController {
     @GetMapping("/leaderboard")
     public ResponseEntity<List<CitizenPointsResponse>> getPublicLeaderboard() {
         return ResponseEntity.ok(gamificationService.getTopContributors(5));
+    }
+
+    /**
+     * GET /api/public/transparency – anonymized city-wide statistics.
+     */
+    @GetMapping("/transparency")
+    public ResponseEntity<TransparencyStatsResponse> getTransparency() {
+        return ResponseEntity.ok(transparencyService.getPublicStats());
     }
 }
 
