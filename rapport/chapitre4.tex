@@ -1,178 +1,897 @@
 % ==============================================================================
 % FICHIER : chapitre4.tex
-% Description : Chapitre 4 (Sprint 1) : Inscription, Authentification, Gestion profil
+% Description : Chapitre 4 : Release 2 -- Gestion avancée, rapports et intelligence artificielle
 % Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
 % Organisme d'accueil : HRMAPS
 % ==============================================================================
 
-\chapter[Sprint 1 : Authentification et Profil]{Sprint 1 : Inscription, Authentification, Gestion profil et réinitialiser mot de passe}
+\chapter{Release 2 : Gestion avancée, rapports et intelligence artificielle}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
-La gestion d'identité et la sécurité constituent le premier pilier fonctionnel de la plateforme \textit{SafeCity-Connect}. L'objectif du Sprint 1 est de concevoir et réaliser un système d'authentification robuste et unifié, permettant aux citoyens de s'inscrire, de se connecter, de gérer leurs données de profil et de réinitialiser leur mot de passe en toute sécurité. Ce chapitre détaille l'analyse fonctionnelle, les diagrammes de séquence UML, le diagramme de classes spécifique au sprint, et la réalisation technique s'appuyant sur Keycloak et Spring Security.
+Ce quatrième chapitre se consacre à l'exposition de la seconde release (Release 2) de notre projet \textbf{SafeCity-Connect}. Cette phase intègre les fonctionnalités avancées destinées à la planification des interventions techniques, à la modération et au contrôle de conformité des réparations sur le terrain par l'administration, au portail décisionnel analytique, ainsi qu'aux apports de l'Intelligence Artificielle.
+
+Cette release vient compléter l'expérience utilisateur et accroître la performance des équipes de la mairie en automatisant la classification visuelle par le modèle d'apprentissage profond \textbf{YOLOv8}, en fournissant une carte de chaleur (\textbf{Heatmap}) géospatiale, et en déployant un support par tickets d'assistance citoyenne. Nous détaillerons les différents diagrammes UML de conception et d'analyse élaborés, ainsi que les interfaces graphiques développées.
 
 % ------------------------------------------------------------------------------
-% 1. BACKLOG SPRINT 1
+% 4.1. ORGANISATION DES SPRINTS
 % ------------------------------------------------------------------------------
-\section{BACKLOG Sprint 1}
-Le Backlog du Sprint 1 regroupe l'ensemble des récits utilisateurs associés à la gestion d'identité :
+\section{Organisation des sprints}
+Cette seconde version s'organise en trois sprints complémentaires permettant de déployer progressivement les fonctionnalités intelligentes et décisionnelles de la plateforme :
 \begin{itemize}
-    \item \textbf{US02 -- Inscription et Connexion SSO} : Permettre à un citoyen de créer un compte et de se connecter de manière centralisée.
-    \item \textbf{US03 -- Gestion de profil et Mot de passe oublié} : Permettre à l'utilisateur connecté de modifier ses données personnelles et de réinitialiser son mot de passe en cas de perte via e-mail.
+    \item \textbf{Sprint 4 : Gestion des missions et interventions terrain} (US-26 à US-35)
+    \item \textbf{Sprint 5 : Rapports et Dashboards (Heatmaps et rapports)} (US-36 à US-41)
+    \item \textbf{Sprint 6 : Intelligence Artificielle (YOLOv8), support et alertes administrateur} (US-42 à US-51)
 \end{itemize}
 
-% ------------------------------------------------------------------------------
-% 2. ANALYSE ET SPÉCIFICATION DES BESOINS
-% ------------------------------------------------------------------------------
-\section{Analyse et spécification des besoins}
-
-\subsection{Diagramme de cas d'utilisation}
-La figure \ref{fig:uc_sprint1} modélise les cas d'utilisation spécifiques aux comptes utilisateurs.
+La figure suivante schématise la répartition des sprints 4, 5 et 6 au sein de la Release 2 :
 
 \begin{figure}[H]
     \centering
-    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure : Diagramme de Cas d'Utilisation -- Sprint 1 (Gestion Comptes)]}\hss}\vfill}}
-    \caption{Diagramme de cas d'utilisation : Sprint 1}
-    \label{fig:uc_sprint1}
+    \includegraphics[width=\linewidth]{release_2.png}
+    \caption{Organisation des sprints de la release 2}
+    \label{fig:release2_planning}
 \end{figure}
 
-\subsection{Description textuelle}
-Voici la description textuelle du cas d'utilisation principal \textbf{« S'authentifier »} :
-\begin{itemize}
-    \item \textbf{Acteurs} : Citoyen, Administrateur.
-    \item \textbf{Préconditions} : L'acteur possède un compte enregistré dans le système.
-    \item \textbf{Scénario nominal} :
-    \begin{enumerate}
-        \item L'utilisateur clique sur le bouton « Connexion » de l'application Angular.
-        \item L'application redirige l'utilisateur vers la page de login Keycloak sécurisée.
-        \item L'utilisateur saisit son identifiant (ou email) et son mot de passe, puis valide.
-        \item Keycloak valide les informations d'identification.
-        \item Keycloak redirige l'utilisateur vers le frontend avec un code d'autorisation.
-        \item Le frontend échange ce code contre un jeton JWT d'accès et un jeton de rafraîchissement.
-        \item L'utilisateur accède à son espace personnel.
-    \end{enumerate}
-    \item \textbf{Scénarios alternatifs} : En cas d'identifiants incorrects, un message d'erreur s'affiche sur la mire Keycloak et l'authentification est rejetée.
-\end{itemize}
+% ------------------------------------------------------------------------------
+% 4.2. SPRINT 4 : GESTION DES MISSIONS ET INTERVENTIONS TERRAIN
+% ------------------------------------------------------------------------------
+\section{Sprint 4 : Gestion des missions et interventions terrain}
+Le Sprint 4 se concentre sur le flux d'attribution et de traitement des anomalies : la planification par la mairie, la prise en charge et la réparation par les équipes sur site, et la transmission de la photo justificative.
 
-% ------------------------------------------------------------------------------
-% 3. PRÉSENTATION ÉCRAN IHM
-% ------------------------------------------------------------------------------
-\section{Présentation Écran IHM}
-Les interfaces utilisateurs de ce sprint ont été conçues pour être fluides et claires, respectant la charte graphique moderne et adaptative de \textit{SafeCity-Connect}.
+\subsection{Sprint Goal}
+L'objectif de cette itération est de permettre à l'administration d'affecter les incidents validés aux services techniques (\texttt{assigned\_department}), et au rôle \texttt{DEPARTMENT} de consulter ses dossiers sur le portail Angular et de soumettre une preuve photo de réparation (\texttt{POST /api/incidents/\{id\}/department-fix}).
+
+\subsection{Sprint Backlog}
+Le backlog planifié pour le sprint 4 est récapitulé dans le tableau suivant :
+
+\begin{table}[H]
+    \centering
+    \caption{Sprint Backlog du Sprint 4 : Gestion des Interventions}
+    \label{tab:backlog_sprint4}
+    \vspace{0.2cm}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{|l|X|c|}
+        \hline
+        \textbf{User Stories} & \textbf{Tâches de développement et d'intégration} & \textbf{Durée} \\ \hline
+        \textbf{US-25 : Affecter un incident} & 
+        - Développer le backend d'affectation d'un incident à un département.\\
+        & - Développer l'interface web Angular de choix du service technique.\\
+        & - Créer les APIs REST de planification. & 2j \\ \hline
+        \textbf{US-26 : Modifier affectation} &
+        - Développer l'API REST de réassignation d'incidents.\\
+        & - Mettre à jour l'historique d'audit (Timeline). & 2j \\ \hline
+        \textbf{US-27 : Photo de preuve} &
+        - Concevoir l'API REST de réception d'upload multipart pour les correctifs.\\
+        & - Intégrer l'upload photo sur l'espace DEPARTMENT (portail Angular). & 2j \\ \hline
+        \textbf{US-28 : Consulter mes missions} &
+        - Développer l'API REST de filtrage des tâches affectées à un département.\\
+        & - Développer l'interface Flutter d'affichage des ordres de travail. & 1j \\ \hline
+        \textbf{US-29 : Guidage GPS} &
+        - Afficher la localisation de l'incident sur la carte Leaflet du portail DEPARTMENT. & 1j \\ \hline
+        \textbf{US-30 : Consulter interventions} &
+        - Développer l'interface de supervision globale des anomalies programmées. & 1j \\ \hline
+        \textbf{US-31 : Étudier les preuves} &
+        - Développer l'affichage comparatif Angular côte à côte (avant/après). & 2j \\ \hline
+        \textbf{US-32 : Valider/rejeter la fixation} &
+        - Implémenter le service de modération de clôture de réparations.\\
+        & - Développer les boutons de validation finale administrative. & 1j \\ \hline
+        \textbf{US-33 : Motif de rejet} &
+        - Ajouter la contrainte de saisie obligatoire du motif de rejet.\\
+        & - Enregistrer et consigner le motif de refus dans l'historique. & 1j \\ \hline
+        \textbf{US-34 : Filtrer interventions} &
+        - Implémenter le filtrage des incidents par statut sur le portail DEPARTMENT. & 1j \\ \hline
+        \textbf{US-35 : Doublons spatiaux} &
+        - Coder l'algorithme SQL d'exclusion géospatiale des doublons à la soumission. & 1j \\ \hline
+    \end{tabularx}
+\end{table}
+
+\subsection{Implémentation du sprint 4}
+
+\paragraph{Expression des besoins}
+Le service technique se connecte au portail web (rôle \texttt{DEPARTMENT}), consulte les incidents affectés à son département et ouvre la fiche détaillée. Après intervention sur le terrain, il dépose une photo de preuve via le formulaire prévu : le statut passe à \texttt{FIX\_SUBMITTED}. L'administrateur examine ensuite les photos avant/après et approuve (\texttt{RESOLVED}) ou refuse le correctif en motivant son choix.
+
+La figure suivante présente le diagramme de cas d'utilisation de ce sprint :
 
 \begin{figure}[H]
     \centering
-    \framebox[\textwidth]{\vbox to 6cm{\vfill\hbox to \textwidth{\hss\textbf{[Capture d'écran : Interface d'Authentification Keycloak SSO personnalisée]}\hss}\vfill}}
-    \caption{Mire de connexion sécurisée (Keycloak SSO)}
-    \label{fig:ihm_login}
+    \includegraphics[width=\linewidth]{uc_sprint4.png}
+    \caption{Diagramme de cas d'utilisation du sprint 4}
+    \label{fig:uc_sprint4}
 \end{figure}
 
-% ------------------------------------------------------------------------------
-% 4. DIAGRAMME DE SÉQUENCE
-% ------------------------------------------------------------------------------
-\section{Diagramme de séquence}
-Cette section illustre la cinématique des messages échangés entre le client Angular, Keycloak, le backend Spring Boot et la base de données PostgreSQL pour les différents cas d'utilisation.
+Ce diagramme illustre les interactions entre le service technique (DEPARTMENT), l'administrateur et le système.
 
-\subsection{Diagramme de séquence « Authentification »}
-La figure \ref{fig:seq_auth} décrit le flux d'authentification s'appuyant sur le protocole OpenID Connect et le protocole PKCE.
+Le tableau suivant décrit le cas d'utilisation \textbf{« Déclarer un incident résolu (preuve de fixation) »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Soumettre preuve de fixation »}
+    \label{tab:txt_soumettre_preuve}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Soumettre une preuve de fixation \\ \hline
+        \textbf{Acteur} & Service technique (DEPARTMENT) \\ \hline
+        \textbf{Pré-condition} & L'incident est au statut \texttt{ASSIGNED} pour ce département. \\ \hline
+        \textbf{Post-condition} & La photo de réparation est enregistrée et le statut passe à \texttt{FIX\_SUBMITTED}. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le service technique accède à la liste des incidents affectés sur le portail web.\\
+        & 2. Il sélectionne la fiche d'incident et clique sur « Déclarer résolu ».\\
+        & 3. La caméra mobile s'active pour prendre la photo de l'anomalie réparée.\\
+        & 4. Il dépose la photo de preuve et valide l'envoi.\\
+        & 5. Le backend Spring Boot stocke le fichier binaire.\\
+        & 6. Le statut de l'incident est mis à jour en \texttt{FIX\_SUBMITTED}.\\
+        & 7. L'action est historisée dans le journal de la Timeline. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. La photo prise est floue ou incorrecte.\\
+        & 3'.1 L'utilisateur annule et reprend la photo. \\ \hline
+        \textbf{Cas d’erreur} &
+        5'. Échec de stockage du fichier sur le serveur (dépassement de taille).\\
+        & 5'.1 Le système renvoie une erreur et demande de réduire la taille ou de réessayer. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Valider/rejeter la fixation avec motif »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Modérer la réparation »}
+    \label{tab:txt_mod_reparation}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Valider ou rejeter la fixation avec motif \\ \hline
+        \textbf{Acteur} & Administrateur Municipal \\ \hline
+        \textbf{Pré-condition} & L'incident est à l'état \texttt{FIX\_SUBMITTED}. \\ \hline
+        \textbf{Post-condition} & L'incident est clos (\texttt{RESOLVED}) ou renvoyé à l'intervention (\texttt{ASSIGNED}). \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'administrateur ouvre l'espace de modération Angular web.\\
+        & 2. Le système affiche la photo initiale et la photo preuve côte à côte.\\
+        & 3. L'administrateur clique sur « Valider » ou sur « Rejeter ».\\
+        & [Scénario Validation] :\\
+        & 4a. Le statut passe à \texttt{RESOLVED}, et la date \texttt{resolved\_at} est enregistrée.\\
+        & 5a. La timeline est mise à jour et les points de gamification sont attribués au citoyen.\\
+        & [Scénario Rejet] :\\
+        & 4b. L'administrateur doit saisir obligatoirement un motif textuel de refus.\\
+        & 5b. Le statut repasse à \texttt{ASSIGNED} et le motif de rejet est consigné dans la Timeline. \\ \hline
+        \textbf{Scénario alternatif} &
+        4b'. L'administrateur valide le rejet avec un champ de motif vide.\\
+        & 4b'.1 La console web bloque l'action et affiche « Le motif de rejet est obligatoire ». \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Transaction de base de données interrompue.\\
+        & 1'.1 Le système annule les mises à jour pour préserver la cohérence. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Filtrer les interventions »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Filtrer les interventions »}
+    \label{tab:txt_filtre_interv}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Filtrer les interventions (DEPARTMENT) \\ \hline
+        \textbf{Acteur} & Service technique \\ \hline
+        \textbf{Pré-condition} & Utilisateur authentifié avec le rôle DEPARTMENT. \\ \hline
+        \textbf{Post-condition} & La liste affiche les incidents filtrés. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le service technique ouvre la liste des incidents affectés.\\
+        & 2. Il choisit un critère de filtrage.\\
+        & 3. Le backend renvoie les enregistrements correspondants.\\
+        & 4. L'interface Angular affiche le résultat. \\ \hline
+        \textbf{Scénario alternatif} & Néant \\ \hline
+        \textbf{Cas d’erreur} &
+        3'. Erreur de connexion au serveur.\\
+        & 3'.1 Un message d'erreur technique s'affiche. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Afin de représenter l'enchaînement temporel des interactions, nous présentons ci-dessous les diagrammes de séquences système associés :
 
 \begin{figure}[H]
     \centering
-    \framebox[\textwidth]{\vbox to 6cm{\vfill\hbox to \textwidth{\hss\textbf{[Diagramme de Séquence UML : Authentification PKCE OIDC]}\hss}\vfill}}
-    \caption{Diagramme de séquence : Authentification unifiée}
-    \label{fig:seq_auth}
+    \includegraphics[width=\linewidth]{seq_sys_preuve.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Soumettre preuve de fixation»}
+    \label{fig:seq_sys_preuve}
 \end{figure}
-
-\subsection{Diagramme de séquence « Gestion profil »}
-La figure \ref{fig:seq_profile} illustre le cas où l'utilisateur connecté met à jour son profil (ex : prénom, nom, email).
 
 \begin{figure}[H]
     \centering
-    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Diagramme de Séquence UML : Mise à jour du Profil]}\hss}\vfill}}
-    \caption{Diagramme de séquence : Gestion du profil utilisateur}
-    \label{fig:seq_profile}
+    \includegraphics[width=\linewidth]{seq_sys_mod_fix.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Valider ou rejeter la fixation»}
+    \label{fig:seq_sys_mod_fix}
 \end{figure}
 
-\subsection{Diagramme de séquence « Inscription »}
-La figure \ref{fig:seq_inscription} montre comment le compte citoyen est créé dans Keycloak et synchronisé en base de données.
+\paragraph{Conception du sprint 4}
+Le diagramme de classes structurel du module « Gestion des interventions et des missions » décrit les entités logicielles associées :
 
 \begin{figure}[H]
     \centering
-    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Diagramme de Séquence UML : Inscription Citoyenne et Synchro BDD]}\hss}\vfill}}
-    \caption{Diagramme de séquence : Inscription d'un nouveau compte}
-    \label{fig:seq_inscription}
+    \includegraphics[width=\linewidth]{classes_sprint4.png}
+    \caption{Diagramme de classe de la «Gestion des interventions et missions»}
+    \label{fig:class_sprint4}
 \end{figure}
 
-\subsection{Diagramme de séquence « mot de passe oublier »}
-La figure \ref{fig:seq_pwd_forget} montre le processus de réinitialisation sécurisé par envoi d'un e-mail contenant un lien temporaire signé.
+Les diagrammes de séquence de conception modélisent les interactions logiques détaillées entre les objets du backend Spring Boot et les clients d'interfaces :
 
 \begin{figure}[H]
     \centering
-    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Diagramme de Séquence UML : Mot de passe oublié et Réinitialisation]}\hss}\vfill}}
-    \caption{Diagramme de séquence : Réinitialisation du mot de passe}
-    \label{fig:seq_pwd_forget}
+    \includegraphics[width=\linewidth]{seq_resolution_moderation.png}
+    \caption{Diagramme de séquence de conception «Soumettre preuve de fixation»}
+    \label{fig:seq_concep_preuve}
 \end{figure}
-
-% ------------------------------------------------------------------------------
-% 5. DIAGRAMME DE CLASSES
-% ------------------------------------------------------------------------------
-\section{Diagramme de classes}
-La structure de données de ce sprint gère l'utilisateur et son profil. Le diagramme de classes est illustré dans la figure \ref{fig:class_sprint1}.
 
 \begin{figure}[H]
     \centering
-    \framebox[\textwidth]{\vbox to 5.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure : Diagramme de Classes -- Sprint 1 (Gestion Utilisateurs)]}\hss}\vfill}}
-    \caption{Diagramme de classes du Sprint 1}
-    \label{fig:class_sprint1}
+    \includegraphics[width=\linewidth]{seq_resolution_moderation.png}
+    \caption{Diagramme de séquence de conception «Valider ou rejeter la fixation»}
+    \label{fig:seq_concep_mod_fix}
 \end{figure}
 
+\subsection{Réalisation}
+Les interfaces réelles développées durant ce quatrième sprint sont présentées ci-dessous :
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.8 : Interface mobile Flutter du signalement de réparation terrain (Agent)]}\hss}\vfill}}
+    \caption{Interface mobile de soumission de preuve de réparation (Agent)}
+    \label{fig:ui_agent_resolve}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.9 : Interface mobile Flutter de la liste des interventions affectées à l'agent]}\hss}\vfill}}
+    \caption{Interface mobile de consultation des interventions affectées à l'agent}
+    \label{fig:ui_agent_list}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.10 : Interface web Angular de modération et d'analyse des photos comparative côte à côte]}\hss}\vfill}}
+    \caption{Interface web de modération et d'analyse comparative des photos}
+    \label{fig:ui_web_compare}
+\end{figure}
+
+\subsection{Phase de tests}
+Afin de valider la robustesse de l'envoi d'images lourdes et de la conteneurisation, nous avons mené des tests :
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 3.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.11 : Test de téléversement multipart et de rejet de formulaire sans photo preuve]}\hss}\vfill}}
+    \caption{Test de téléversement multipart et de rejet sans photo preuve}
+    \label{fig:test_agent_form}
+\end{figure}
+
+\subsection{Sprint Review}
+L'ensemble du flux mobile terrain et du portail de comparaison photo web a été validé auprès de notre encadrant professionnel de \textbf{HRMAPS, M. Rami Bouafif}. Il a validé la simplicité d'utilisation pour les équipes de voirie.
+
+\subsection{Sprint Rétrospective}
+Le tableau ci-dessous synthétise le bilan technique de cette itération :
+
+\begin{table}[H]
+    \centering
+    \caption{Sprint Rétrospective du Sprint 4}
+    \label{tab:retro_sprint4}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|X|X|}
+        \hline
+        \textbf{Points positifs} & \textbf{Difficultés rencontrées} \\ \hline
+        - La transition de statut et la consignation automatique dans la Timeline d'audit est synchrone.\\
+        - L'upload multipart d'images HD est correctement géré côté Spring Boot. & 
+        - Des échecs de requêtes HTTP se sont manifestés en raison de la taille limite par défaut du serveur Tomcat.\\
+        & $\rightarrow$ Résolu en ajustant la taille maximale de requêtes multipart à 10MB dans \texttt{application.yml}. \\
+        \hline
+    \end{tabularx}
+\end{table}
+
 % ------------------------------------------------------------------------------
-% 6. RÉALISATION
+% 4.3. SPRINT 5 : RAPPORTS ET DASHBOARDS (HEATMAPS POSTGIS)
 % ------------------------------------------------------------------------------
-\section{Réalisation}
+\section{Sprint 5 : Rapports et Dashboards (Heatmaps et rapports)}
+Le Sprint 5 introduit les outils décisionnels clés de la plateforme : statistiques dynamiques, exports documentaires, notation citoyenne des correctifs, et carte de chaleur spatiale des anomalies.
 
-\subsection{Création du schéma « user »}
-La table correspondante dans notre base de données relationnelle est \texttt{table_user_profile}. Elle est déclarée avec les attributs \texttt{id} (UUID hérité de Keycloak), \texttt{username}, \texttt{email}, et \texttt{impact_points} (valeur initiale à 0).
+\subsection{Sprint Goal}
+L'objectif principal de ce sprint est de permettre à l'administrateur municipal d'accéder à un tableau de bord analytique web en Angular 18 doté d'une carte thermique (\textbf{Heatmap}) basée sur l'agrégation des coordonnées GPS, d'exporter des rapports PDF et consulter les indicateurs SLA, et d'offrir aux citoyens la possibilité de noter et commenter la qualité des réparations accomplies.
 
-\subsection{Sécurité}
-La sécurité est orchestrée en couplant notre serveur d'identité Keycloak avec la configuration de sécurité Spring Security de notre application backend.
+\subsection{Sprint Backlog}
+Le backlog planifié pour le sprint 5 est récapitulé dans le tableau suivant :
 
-\paragraph{Configuration Keycloak}
-Nous avons créé un Realm nommé \texttt{safecity} au sein de Keycloak. Dans ce Realm, trois rôles de base sont configurés :
-\begin{itemize}
-    \item \textbf{CITIZEN} : Attribué par défaut à tout utilisateur s'inscrivant via le formulaire public.
-    \item \textbf{ADMIN} : Attribué manuellement aux gestionnaires municipaux.
-    \item \textbf{DEPARTMENT} : Attribué aux agents techniques et départements municipaux chargés des travaux.
-\end{itemize}
-Nous avons également configuré un client public \texttt{safecity-frontend} supportant le flux OAuth2 PKCE avec redirections autorisées vers l'adresse \texttt{http://localhost:4200}.
+\begin{table}[H]
+    \centering
+    \caption{Sprint Backlog du Sprint 5 : Rapports et Dashboards}
+    \label{tab:backlog_sprint5}
+    \vspace{0.2cm}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{|l|X|c|}
+        \hline
+        \textbf{User Stories} & \textbf{Tâches de développement et d'intégration} & \textbf{Durée} \\ \hline
+        \textbf{US-36 : Dashboard Admin} & 
+        - Développer le backend d'indicateurs de performance clés (KPIs, SLA, notes).\\
+        & - Intégrer les graphiques statistiques dynamiques sur la console Angular. & 3j \\ \hline
+        \textbf{US-37 : Heatmap} &
+        - Coder la requête de densité spatiale optimisée sous PostgreSQL/PostGIS.\\
+        & - Intégrer la carte thermique interactive Leaflet.heat sur le front-end. & 3j \\ \hline
+        \textbf{US-38 : Rapport d'incident PDF} &
+        - Développer le service Java open-source OpenPDF de génération de fiches.\\
+        & - Créer le bouton d'impression et de téléchargement PDF sur mobile/web. & 2j \\ \hline
+        \textbf{US-39 : Statistiques publiques} &
+        - Exposer les métriques consolidées via TransparencyService. & 2j \\ \hline
+        \textbf{US-40 : Consulter évaluations} &
+        - Développer l'API REST de lecture des notes moyennes et avis citoyens. & 2j \\ \hline
+        \textbf{US-41 : Évaluer réparation} &
+        - Créer le widget de notation par étoiles sur l'application mobile citoyenne.\\
+        & - Développer le backend d'enregistrement des notes d'incidents clos. & 3j \\ \hline
+    \end{tabularx}
+\end{table}
 
-\paragraph{Configuration Spring Security}
-Côté Spring Boot 3.2, nous configurons l'application en tant que serveur de ressources OAuth2 (\textit{OAuth2 Resource Server}) dans une classe de configuration de sécurité :
-\begin{verbatim}
-@Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/public/**").permitAll()
-            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .requestMatchers("/api/department/**").hasRole("DEPARTMENT")
-            .requestMatchers("/api/citizen/**").hasRole("CITIZEN")
-            .anyRequest().authenticated()
-        )
-        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
-    return http.build();
-}
-\end{verbatim}
+\subsection{Implémentation du sprint 5}
 
-\subsection{Création des web services « API Endpoint »}
-Les services web exposés sont développés sous forme de contrôleurs REST Spring Boot. Par exemple, le contrôleur \texttt{UserProfileController} expose les routes permettant de récupérer et de modifier les données de profil :
-\begin{itemize}
-    \item \textbf{GET} \texttt{/api/citizen/profile} : Récupérer les informations de l'utilisateur connecté (id extrait à partir du JWT).
-    \item \textbf{PUT} \texttt{/api/citizen/profile} : Mettre à jour les informations (nom, prénom) et synchroniser avec Keycloak via l'API d'administration Keycloak.
-\end{itemize}
+\paragraph{Expression des besoins}
+Le Sprint 5 introduit les outils décisionnels clés de la plateforme. L'administrateur accède à un portail Angular synthétisant l'activité de la ville (incidents résolus, délais moyens d'intervention). L'API \texttt{/api/public/heatmap} agrège les coordonnées des incidents pour alimenter la carte thermique Leaflet. De plus, après la clôture d'un incident, le citoyen est invité à évaluer le travail de voirie via un système de notation à étoiles et à formuler un avis textuel de satisfaction.
 
-\subsection{Enchaînement des interfaces réalisées}
-Lors de l'utilisation réelle, un utilisateur non authentifié arrivant sur l'application Angular est immédiatement redirigé vers l'IHM de Keycloak. Dès la saisie d'identifiants valides, l'enchaînement des interfaces le ramène vers la page d'accueil d'historique de signalement citoyen où ses informations de profil (nom, points d'impact) s'affichent de manière personnalisée.
+La figure suivante présente le diagramme de cas d'utilisation de ce sprint :
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{uc_sprint5.png}
+    \caption{Diagramme de cas d'utilisation du sprint 5}
+    \label{fig:uc_sprint5}
+\end{figure}
+
+Ce diagramme illustre les interactions d'évaluation et de pilotage décisionnel entre le Citoyen, l'Administrateur et le système.
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Évaluer la qualité de la réparation (Citoyen) »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Déposer un avis »}
+    \label{tab:txt_eval_citoyen}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Évaluer la qualité de la réparation \\ \hline
+        \textbf{Acteur} & Citoyen \\ \hline
+        \textbf{Pré-condition} & Le citoyen est connecté et l'incident est résolu (\texttt{RESOLVED}). \\ \hline
+        \textbf{Post-condition} & L'évaluation (note et avis) est persistée et historisée. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le citoyen accède à la liste de ses signalements résolus sur mobile.\\
+        & 2. Il sélectionne la fiche d'incident.\\
+        & 3. Le système affiche le widget de notation par étoiles interactives.\\
+        & 4. Le citoyen sélectionne sa note de satisfaction (1 à 5) et tape un commentaire.\\
+        & 5. Il clique sur « Soumettre mon avis ».\\
+        & 6. Le backend Spring Boot met à jour la note de l'incident et recalcule la note moyenne globale.\\
+        & 7. Un message confirme l'enregistrement de l'évaluation. \\ \hline
+        \textbf{Scénario alternatif} &
+        4'. L'utilisateur clique sur soumettre avec une note à zéro.\\
+        & 4'.1 L'application mobile lui impose d'attribuer au moins 1 étoile. \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. L'utilisateur tente de soumettre une deuxième note pour le même incident.\\
+        & 1'.1 Le système rejette l'opération pour préserver l'unicité du vote. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Consulter le dashboard analytique et la Heatmap »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Consulter dashboard administrateur »}
+    \label{tab:txt_dashboard_admin}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Consulter le dashboard et la Heatmap spatiale \\ \hline
+        \textbf{Acteur} & Administrateur Municipal \\ \hline
+        \textbf{Pré-condition} & L'administrateur est authentifié sur la console web. \\ \hline
+        \textbf{Post-condition} & La Heatmap interactive Leaflet et les indicateurs (KPIs) s'affichent. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'administrateur clique sur l'onglet de pilotage de sa console web.\\
+        & 2. Le backend exécute une requête d'agrégation sur \texttt{latitude}/\texttt{longitude}.\\
+        & 3. Les points d'intensité sont renvoyés au client Angular.\\
+        & 4. L'interface Angular affiche les graphiques analytiques (KPI, SLA).\\
+        & 5. La carte Leaflet affiche la carte thermique (Heatmap) en temps réel. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. Aucune donnée d'incidents non résolus n'est disponible.\\
+        & 3'.1 La carte Leaflet affiche le fond de plan vierge sans points de chaleur. \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Échec de calcul de la densité spatiale par la base de données.\\
+        & 1'.1 Le système génère un log d'erreur et affiche un message d'indisponibilité. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Imprimer le rapport PDF officiel d'un incident »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Imprimer le rapport PDF d'incident »}
+    \label{tab:txt_print_pdf}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Imprimer le rapport PDF d'incident \\ \hline
+        \textbf{Acteur} & Citoyen, Administrateur Municipal \\ \hline
+        \textbf{Pré-condition} & L'incident existe et les détails sont accessibles. \\ \hline
+        \textbf{Post-condition} & Un document PDF officiel formaté est généré et téléchargé sur le terminal. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'utilisateur sélectionne l'incident souhaité.\\
+        & 2. Il clique sur le bouton « Exporter fiche PDF ».\\
+        & 3. Le backend compile dynamiquement les informations via la bibliothèque OpenPDF.\\
+        & 4. Le backend insère le logo municipal, les coordonnées spatiales, les photos (avant/après) et l'historique complet d'audit.\\
+        & 5. Le flux de données PDF est renvoyé au client.\\
+        & 6. Le fichier PDF se télécharge automatiquement sur l'appareil. \\ \hline
+        \textbf{Scénario alternatif} & Néant \\ \hline
+        \textbf{Cas d’erreur} &
+        3'. Erreur lors de l'intégration ou du chargement de l'une des photos d'incidents.\\
+        & 3'.1 Le service génère le rapport PDF en remplaçant la photo manquante par un logo alternatif de secours. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Afin de représenter l'enchaînement temporel des interactions, nous présentons ci-dessous les diagrammes de séquences système de ce cinquième sprint :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_dashboard.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Consulter dashboard administrateur»}
+    \label{fig:seq_sys_dashboard}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_pdf.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Imprimer le rapport PDF d'incident»}
+    \label{fig:seq_sys_pdf}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_eval.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Évaluer la réparation»}
+    \label{fig:seq_sys_eval}
+\end{figure}
+
+\paragraph{Conception du sprint 5}
+Le diagramme de classes structurel du module de reporting et d'indicateurs de satisfaction est présenté ci-dessous :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{class_sprint5.png}
+    \caption{Diagramme de classe du «Reporting, Statistiques et Dashboard»}
+    \label{fig:class_sprint5}
+\end{figure}
+
+Les diagrammes de séquence de conception modélisent le comportement applicatif interne des objets du système :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_dashboard.png}
+    \caption{Diagramme de séquence de conception «Consulter dashboard administrateur et Heatmap»}
+    \label{fig:seq_concep_dashboard}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_eval.png}
+    \caption{Diagramme de séquence de conception «Évaluer la qualité de la réparation»}
+    \label{fig:seq_concep_eval}
+\end{figure}
+
+\subsection{Réalisation}
+Les captures suivantes illustrent les maquettes et interfaces d'affichage finales de ce désigne sprint :
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.19 : Interface de notation mobile par étoiles interactives (Citoyen)]}\hss}\vfill}}
+    \caption{Interface mobile de notation par étoiles interactives (Citoyen)}
+    \label{fig:ui_mobile_rating}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.20 : Interface web Angular du tableau de bord de supervision et de suivi des SLAs]}\hss}\vfill}}
+    \caption{Interface web du tableau de bord de supervision et SLAs}
+    \label{fig:ui_web_dashboard}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.21 : Interface web Angular de la carte thermique (agrégation latitude/longitude)]}\hss}\vfill}}
+    \caption{Interface web de la carte thermique (agrégation latitude/longitude)}
+    \label{fig:ui_web_heatmap}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.22 : Maquette du rapport PDF officiel généré d'une fiche d'incident]}\hss}\vfill}}
+    \caption{Maquette du rapport PDF officiel d'une fiche d'incident}
+    \label{fig:ui_pdf_export}
+\end{figure}
+
+\subsection{Sprint Review}
+La démonstration de la carte thermique dynamic Angular 18 et du module de génération de rapports PDF a été validée avec beaucoup d'intérêt par Mme. Nadia Hachani (ISET Bizerte). La précision géospatiale de la Heatmap (agrégation latitude/longitude) a été saluée.
+
+\subsection{Sprint Rétrospective}
+Le tableau ci-dessous présente le bilan technique de cette itération :
+
+\begin{table}[H]
+    \centering
+    \caption{Sprint Rétrospective du Sprint 5}
+    \label{tab:retro_sprint5}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|X|X|}
+        \hline
+        \textbf{Points positifs} & \textbf{Difficultés rencontrées} \\ \hline
+        - La carte de chaleur basée sur l'agrégation des coordonnées GPS s'actualise correctement sans latence de calcul.\\
+        - La génération dynamique de rapports PDF inclut élégamment les images et l'historique complet d'audit. & 
+        - Des ralentissements majeurs ont été constatés lors du calcul des intersections géographiques sur des bases de données volumineuses.\\
+        & $\rightarrow$ Résolu en créant un index spatial de type \textbf{GiST} (Generalized Search Tree) sur la colonne de coordonnées géographiques dans la table des incidents. \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------------------------
+% 4.4. SPRINT 6 : INTELLIGENCE ARTIFICIELLE, SUPPORT ET ALERTES ADMIN
+% ------------------------------------------------------------------------------
+\section{Sprint 6 : Intelligence Artificielle, support et alertes administrateur}
+Le Sprint 6 clôture notre développement technique en intégrant le microservice d'IA YOLOv8 d'analyse automatisée de photos, le support par tickets d'aide citoyenne et le système d'alertes réservé à l'administrateur pour les nouveaux reports à vérifier.
+
+\subsection{Sprint Goal}
+L'objectif principal de ce sprint final est de connecter le service backend de SafeCity-Connect au modèle de deep learning \textbf{YOLOv8} (You Only Look Once) pour qualifier automatiquement les anomalies par photo, de mettre en place le support par tickets interactif d'assistance et de finaliser les alertes administrateur liées aux reports nouvellement soumis.
+
+\subsection{Sprint Backlog}
+Le backlog planifié pour le sprint 6 est récapitulé dans le tableau suivant :
+
+\begin{table}[H]
+    \centering
+    \caption{Sprint Backlog du Sprint 6 : IA, support et alertes admin}
+    \label{tab:backlog_sprint6}
+    \vspace{0.2cm}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{|l|X|c|}
+        \hline
+        \textbf{User Stories} & \textbf{Tâches de développement et d'intégration} & \textbf{Durée} \\ \hline
+        \textbf{US-42 : Alerte nouveau report} & 
+        - Créer l'alerte administrateur déclenchée après la soumission d'un nouveau signalement citoyen. & 1j \\ \hline
+        \textbf{US-43 : Liste des reports à vérifier} &
+        - Développer l'affichage des alertes administrateur liées aux signalements en attente. & 1j \\ \hline
+        \textbf{US-44 : Accès rapide au report} &
+        - Relier chaque alerte au détail du report afin de permettre sa validation, son rejet ou son affectation. & 1j \\ \hline
+        \textbf{US-45 : Création ticket support} &
+        - Coder le formulaire d'ouverture d'un ticket de support privé côté citoyen. & 1j \\ \hline
+        \textbf{US-46 : Ticket d'aide privée} &
+        - Développer le backend d'ouverture de threads de support privés (tickets). & 2j \\ \hline
+        \textbf{US-47 : Répondre aux tickets} &
+        - Coder la console d'échange de messages de support administratif. & 2j \\ \hline
+        \textbf{US-48 : Support d'assistance} &
+        - Intégrer l'API REST de dialogue et le traitement du support par tickets citoyen. & 2j \\ \hline
+        \textbf{US-49 : Détection IA YOLOv8} &
+        - Déployer l'API FastAPI encapsulant le modèle d'IA YOLOv8 d'Ultralytics.\\
+        & - Réaliser la connexion API de prédiction à la soumission mobile. & 2j \\ \hline
+        \textbf{US-50 : Traçabilité des alertes admin} &
+        - Enregistrer les alertes liées aux nouveaux reports pour conserver l'historique des signalements à vérifier. & 2j \\ \hline
+        \textbf{US-51 : Gamification d'impact} &
+        - Coder le service automatique d'octroi de points de citoyenneté (+10 impact points). & 1j \\ \hline
+    \end{tabularx}
+\end{table}
+
+\subsection{Implémentation du sprint 6}
+
+\paragraph{Expression des besoins}
+Le Sprint 6 complète notre projet sur le plan fonctionnel. Lors d'un signalement avec photo, YOLOv8 renseigne \texttt{ai\_category} et \texttt{ai\_confidence} ; l'administrateur reçoit une alerte interne pour vérifier le nouveau report, puis il peut le valider, le rejeter ou l'affecter manuellement à un département. Le citoyen peut aussi ouvrir des tickets de support (\texttt{support\_threads}/\texttt{support\_messages}) auxquels l'administrateur répond depuis sa console.
+
+La figure suivante présente le diagramme de cas d'utilisation de ce sprint :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{uc_sprint6.png}
+    \caption{Diagramme de cas d'utilisation du sprint 6}
+    \label{fig:uc_sprint6}
+\end{figure}
+
+Ce diagramme illustre les interactions d'intelligence artificielle, de support par tickets et d'alertes administrateur entre le Citoyen, le Système IA autonome, l'Administrateur et le système.
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Dialoguer avec le support par tickets d'assistance (Citoyen) »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Utiliser le support par tickets »}
+    \label{tab:txt_support_tickets}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Utiliser le support par tickets d'assistance citoyenne \\ \hline
+        \textbf{Acteur} & Citoyen \\ \hline
+        \textbf{Pré-condition} & Le citoyen accède à l'espace de support de son application mobile. \\ \hline
+        \textbf{Post-condition} & Le message du citoyen est enregistré dans un ticket consultable par l'administrateur. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le citoyen ouvre l'interface de messagerie du Support.\\
+        & 2. Le système affiche une invite de bienvenue.\\
+        & 3. Le citoyen saisit sa question relative aux services urbains ou à un incident.\\
+        & 4. Il clique sur « Envoyer ».\\
+        & 5. Le backend enregistre le message dans le fil de discussion de support.\\
+        & 6. L'administrateur peut consulter le ticket depuis la console web et répondre au citoyen.\\
+        & 7. La réponse de l'administrateur est ajoutée au fil de discussion. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. L'utilisateur saisit un message vide.\\
+        & 3'.1 Le système bloque l'envoi et affiche une alerte. \\ \hline
+        \textbf{Cas d’erreur} &
+        5'. Le service backend est temporairement injoignable.\\
+        & 5'.1 Le système informe le citoyen que son message n'a pas pu être envoyé. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Ouvrir un ticket d'aide privée (support citoyen) »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Envoyer demande d’aide »}
+    \label{tab:txt_ouvrir_ticket}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Ouvrir un ticket d'aide privée (support) \\ \hline
+        \textbf{Acteur} & Citoyen \\ \hline
+        \textbf{Pré-condition} & Le citoyen est connecté sur son application mobile. \\ \hline
+        \textbf{Post-condition} & Un fil de discussion privé est créé et devient accessible à l'administrateur. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le citoyen accède à son espace d'assistance privée.\\
+        & 2. Il clique sur « Contacter la mairie ».\\
+        & 3. Il saisit le sujet (suivi d'incident, réclamation) et son message détaillé.\\
+        & 4. Il clique sur « Soumettre le ticket ».\\
+        & 5. Le backend crée le fil de discussion (\texttt{SupportThread}) et y insère le premier message.\\
+        & 6. Le ticket apparaît dans la console de support de l'administrateur. \\ \hline
+        \textbf{Scénario alternatif} & Néant \\ \hline
+        \textbf{Cas d’erreur} &
+        5'. Échec de connexion réseau lors de l'enregistrement.\\
+        & 5'.1 L'application informe l'utilisateur de l'impossibilité de créer son ticket. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Répondre aux tickets d'assistance (Administrateur) »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Répondre aux demandes d’assistance »}
+    \label{tab:txt_reply_ticket}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Répondre à un ticket d'assistance \\ \hline
+        \textbf{Acteur} & Administrateur Municipal \\ \hline
+        \textbf{Pré-condition} & Un ticket d'assistance ouvert existe dans le système. \\ \hline
+        \textbf{Post-condition} & Le message de réponse est enregistré et joint au fil de discussion. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'administrateur accède aux tickets de support sur sa console web Angular.\\
+        & 2. Le système affiche la liste des fils de discussion ouverts par les citoyens.\\
+        & 3. L'administrateur sélectionne le ticket et lit l'historique des échanges.\\
+        & 4. Il rédige sa réponse d'accompagnement dans le champ texte.\\
+        & 5. Il clique sur « Envoyer la réponse ».\\
+        & 6. Le backend persiste le message et met à jour la date d'actualisation du ticket. \\ \hline
+        \textbf{Scénario alternatif} &
+        4'. L'administrateur choisit de fermer définitivement le ticket.\\
+        & 4'.1 Il clique sur « Clôturer le ticket ». Le statut du fil passe à \texttt{CLOSED}. \\ \hline
+        \textbf{Cas d’erreur} &
+        6'. Le message est vide ou trop long.\\
+        & 6'.1 Le système bloque l'envoi. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Analyse de photos automatisée par l'IA YOLOv8 »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Analyse des demandes »}
+    \label{tab:txt_analyse_yolo}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Analyse automatisée d'images par l'IA YOLOv8 \\ \hline
+        \textbf{Acteur} & Système d'IA YOLOv8 (autonome) \\ \hline
+        \textbf{Pré-condition} & Une photo d'anomalie de chaussée a été transmise lors du signalement mobile. \\ \hline
+        \textbf{Post-condition} & La catégorie de l'anomalie est identifiée et la note de confiance est stockée. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le backend Spring Boot reçoit l'image multipart soumise par le mobile.\\
+        & 2. Spring Boot transmet l'image via une requête HTTP REST au microservice Python.\\
+        & 3. Le microservice FastAPI charge l'image en mémoire et applique le modèle entraîné YOLOv8.\\
+        & 4. Le réseau de neurones détecte la boîte englobante de l'anomalie et détermine sa classe.\\
+        & 5. Le microservice retourne le JSON de prédiction (classe et taux de confiance).\\
+        & 6. Le backend stocke la catégorie prédite (\texttt{aiCategory}) et l'indice de confiance (\texttt{aiConfidence}) sur l'incident. \\ \hline
+        \textbf{Scénario alternatif} &
+        4'. Aucun objet d'incident connu n'est identifié par YOLOv8 sur l'image.\\
+        & 4'.1 Le système IA retourne la classe \texttt{OTHER} avec un indice de confiance à 0. \\ \hline
+        \textbf{Cas d’erreur} &
+        2'. Le microservice Python IA FastAPI est inaccessible ou éteint.\\
+        & 2'.1 Le backend Spring Boot intercepte l'erreur, bascule sur une catégorie par défaut sans bloquer la transaction, et enregistre un log de panne. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Attribution automatique de points civiques (Gamification) »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Attribution score IA »}
+    \label{tab:txt_award_points}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Attribution automatique de points civiques \\ \hline
+        \textbf{Acteur} & Système applicatif (autonome) \\ \hline
+        \textbf{Pré-condition} & L'administrateur municipal valide la conformité d'un signalement citoyen. \\ \hline
+        \textbf{Post-condition} & Le citoyen concerné reçoit +10 points d'impact civique. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'administrateur clique sur « Valider le signalement » sur sa console web.\\
+        & 2. Le backend interroge l'identifiant unique du citoyen à l'origine du rapport (\texttt{reporterKeycloakId}).\\
+        & 3. Le service de gamification est instancié au sein de la transaction.\\
+        & 4. Le service cherche le profil de points associé en base ou l'initialise.\\
+        & 5. Les points d'impact civique sont incrémentés de 10 points (\texttt{totalPoints += 10}).\\
+        & 6. Le système met à jour la table des scores en base de données et consigne l'action. \\ \hline
+        \textbf{Scénario alternatif} & Néant \\ \hline
+        \textbf{Cas d’erreur} &
+        5'. Échec d'écriture ou d'accès à la table des points d'impact civique.\\
+        & 5'.1 La transaction est entièrement annulée pour conserver la cohérence financière des points. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{« Consulter les alertes des reports à vérifier »} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Consulter alertes admin »}
+    \label{tab:txt_cons_notifs}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Consulter les alertes des reports à vérifier \\ \hline
+        \textbf{Acteur} & Administrateur Municipal \\ \hline
+        \textbf{Pré-condition} & L'administrateur est authentifié sur la console web. \\ \hline
+        \textbf{Post-condition} & La liste des nouveaux reports en attente de vérification s'affiche. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'administrateur ouvre le panneau des alertes sur le portail web.\\
+        & 2. L'interface interroge le backend Spring Boot.\\
+        & 3. Le backend extrait les reports récemment créés ou encore au statut \texttt{PENDING}.\\
+        & 4. La console affiche les alertes et permet d'ouvrir directement la fiche du report à vérifier. \\ \hline
+        \textbf{Scénario alternatif} & Néant \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Problème de connexion avec le serveur d'APIs.\\
+        & 1'.1 La console affiche un message d'indisponibilité des alertes. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Afin de représenter l'enchaînement temporel des interactions, nous présentons ci-dessous les diagrammes de séquences système de ce sixième sprint :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_support_tickets.png}
+    \caption{Diagramme de séquence système du cas d’utilisation «Utiliser support par tickets d’assistance»}
+    \label{fig:seq_sys_support_tickets}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_notifs.png}
+    \caption{Diagramme de séquence système du cas d’utilisation «Consulter alertes admin»}
+    \label{fig:seq_sys_notifs}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_yolo.png}
+    \caption{Diagramme de séquence système du cas d’utilisation «Consulter score IA»}
+    \label{fig:seq_sys_yolo}
+\end{figure}
+
+\paragraph{Conception du sprint 6}
+Le diagramme de classes structurel du module d'Intelligence Artificielle YOLOv8, du système d'assistance par tickets et des alertes administrateur est présenté ci-dessous :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{class_sprint6.png}
+    \caption{Diagramme de classe du module «IA, support et alertes admin»}
+    \label{fig:class_sprint6}
+\end{figure}
+
+Les diagrammes de séquence de conception modélisent les flux logiques internes détaillés de notre sixième sprint :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_notifs.png}
+    \caption{Diagramme de séquence de conception «Consulter alertes admin»}
+    \label{fig:seq_concep_notifs}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_support_tickets.png}
+    \caption{Diagramme de séquence de conception «Utiliser support par tickets d’assistance»}
+    \label{fig:seq_concep_support_tickets}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_signalement_yolo.png}
+    \caption{Diagramme de séquence de conception «Analyse des demandes»}
+    \label{fig:seq_concep_yolo}
+\end{figure}
+
+\subsection{Réalisation}
+Les captures réelles illustrant nos interfaces et notre passerelle d'Intelligence Artificielle finale sont présentées ci-dessous :
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.31 : Interface mobile Flutter de messagerie instantanée d'aide citoyenne Support]}\hss}\vfill}}
+    \caption{Interface du support par tickets d’assistance}
+    \label{fig:ui_mobile_support_tickets}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.32 : Console de débogage et d'affichage des détections YOLOv8 sur image d'anomalie]}\hss}\vfill}}
+    \caption{Interface d’analyse IA}
+    \label{fig:ui_ia_analysis}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.33 : Interface web Angular des alertes de nouveaux reports reçues par l'Administrateur]}\hss}\vfill}}
+    \caption{Interface des alertes côté administrateur}
+    \label{fig:ui_web_notifs}
+\end{figure}
+
+\subsection{Sprint Review}
+La démonstration d'inférence de détection d'anomalies de chaussée par le microservice YOLOv8 FastAPI et l'échange de messages en temps réel du support ont été validés auprès des encadrants universitaire \textbf{Mme. Nadia Hachani} et professionnel \textbf{M. Rami Bouafif (HRMAPS)}. La rapidité d'inférence (moins de 250 ms) a été jugée excellente.
+
+\subsection{Sprint Rétrospective}
+Le tableau ci-dessous présente le bilan technique de cette dernière itération :
+
+\begin{table}[H]
+    \centering
+    \caption{Sprint Rétrospective du Sprint 6}
+    \label{tab:retro_sprint6}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|X|X|}
+        \hline
+        \textbf{Points positifs} & \textbf{Difficultés rencontrées} \\ \hline
+        - Le modèle de Deep Learning YOLOv8 classifie correctement les anomalies urbaines les plus courantes.\\
+        - Le traitement asynchrone des alertes administrateur n'introduit aucun blocage de thread applicatif principal. & 
+        - Des problèmes de performances ont initialement ralenti le démarrage de l'API Python lors de chargements répétitifs du modèle de poids lourds \texttt{.pt}.\\
+        & $\rightarrow$ Résolu en chargeant le modèle YOLOv8 une seule fois de manière statique au démarrage de FastAPI. \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------------------------
+% CONCLUSION
+% ------------------------------------------------------------------------------
 \section*{Conclusion}
-Le Sprint 1 s'est achevé avec la réalisation complète de notre brique de sécurité et de gestion d'identité. Grâce à l'intégration robuste de Keycloak et Spring Security, la plateforme \textit{SafeCity-Connect} garantit la confidentialité des données et sépare hermétiquement les fonctionnalités citoyennes et d'administration. Le chapitre suivant présentera le Sprint 2, le cœur de l'expérience citoyenne, centré sur la gestion des signalements d'incidents sur le terrain assistée par l'intelligence artificielle.
+\addcontentsline{toc}{section}{Conclusion}
+La Release 2 a été menée à son terme avec un haut niveau de performance et de qualité. Grâce aux Sprints 4, 5 et 6, nous avons relié l'exécution technique des équipes de terrain (applications mobiles d'agents, photo preuve de fixation), le pilotage décisionnel administratif de la mairie (Heatmaps et rapports, exports PDF), le traitement par YOLOv8, le support par tickets et les alertes administrateur pour les nouveaux reports à vérifier.
+
+Le cycle complet de développement agile de notre écosystème participatif \textbf{SafeCity-Connect} est désormais entièrement réalisé, testé et validé.

@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { LoginComponent } from './features/auth/login/login.component';
+import { SignupComponent } from './features/auth/signup/signup.component';
+import { ProfileComponent } from './features/profile/profile.component';
 
 export const routes: Routes = [
   /**
@@ -83,6 +86,13 @@ export const routes: Routes = [
         title: 'City Analytics – SafeCity'
       },
       {
+        path: 'users',
+        loadComponent: () =>
+          import('./features/admin/users/admin-users.component')
+            .then(m => m.AdminUsersComponent),
+        title: 'User Accounts - SafeCity'
+      },
+      {
         path: 'incidents/:id',
         loadComponent: () =>
           import('./features/shared/incident-detail/incident-detail.component')
@@ -121,10 +131,19 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () =>
-      import('./features/auth/login/login.component')
-        .then(m => m.LoginComponent),
+    component: LoginComponent,
     title: 'Sign in - SafeCity'
+  },
+  {
+    path: 'signup',
+    component: SignupComponent,
+    title: 'Create account - SafeCity'
+  },
+  {
+    path: 'profile',
+    canActivate: [authGuard],
+    component: ProfileComponent,
+    title: 'My Profile - SafeCity'
   },
   {
     path: 'callback',
@@ -141,4 +160,3 @@ export const routes: Routes = [
   },
   { path: '**', redirectTo: '' }
 ];
-

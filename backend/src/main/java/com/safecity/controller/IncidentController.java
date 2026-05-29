@@ -28,6 +28,7 @@ public class IncidentController {
     private final DuplicateDetectionService duplicateDetectionService;
     private final IncidentAuditService auditService;
     private final IncidentCommentService commentService;
+    private final KeycloakUserService keycloakUserService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('CITIZEN')")
@@ -201,6 +202,16 @@ public class IncidentController {
         if (department != null && !department.isBlank()) {
             return department;
         }
+
+        try {
+            department = keycloakUserService.getUser(jwt.getSubject()).getDepartment();
+            if (department != null && !department.isBlank()) {
+                return department;
+            }
+        } catch (Exception ignored) {
+            // Keep the username fallback for imported demo accounts and offline Keycloak cases.
+        }
+
         department = jwt.getClaimAsString("preferred_username");
         if (department == null) {
             return "";

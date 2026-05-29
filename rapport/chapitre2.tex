@@ -1,125 +1,191 @@
 % ==============================================================================
 % FICHIER : chapitre2.tex
-% Description : Chapitre 2 : Planification & architecture
+% Description : Chapitre 2 : Analyse et spécifications des besoins
 % Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
 % Organisme d'accueil : HRMAPS
 % ==============================================================================
 
-\chapter{Planification \& architecture}
+\chapter{Analyse et spécifications des besoins}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
-La réussite d'un projet informatique complexe repose sur une planification rigoureuse et une architecture logicielle bien pensée. Pour développer \textit{SafeCity-Connect}, nous avons adopté la méthodologie agile \textbf{SCRUM}, réputée pour sa flexibilité et son efficacité de développement. Ce chapitre détaille la spécification des besoins de notre système, présente notre équipe SCRUM, définit le découpage des sprints, expose le Backlog de produit global, et introduit la modélisation fonctionnelle et structurelle à travers les diagrammes UML globaux.
+Après avoir posé les fondations conceptuelles lors de l'étude initiale, il convient désormais de procéder à un examen rigoureux des attentes auxquelles la solution logicielle doit répondre. Cette démarche analytique constitue le socle sur lequel reposera l'ensemble de l'architecture applicative.
 
-% ------------------------------------------------------------------------------
-% 1. SPÉCIFICATION DES BESOINS
-% ------------------------------------------------------------------------------
-\section{Spécification des besoins}
+Le présent chapitre se concentre sur la formalisation des exigences du projet \textbf{SafeCity-Connect}. Nous y dressons d'abord le portrait des différents profils utilisateurs amenés à interagir avec le système, avant d'énoncer les capacités fonctionnelles requises ainsi que les contraintes qualitatives à satisfaire. La constitution du Backlog Produit et l'organisation temporelle des itérations de développement (sprints) seront également abordées.
 
-\subsection{Identification des acteurs du système}
-Nous avons identifié quatre acteurs principaux qui interagissent avec la plateforme :
+\section{Planification du projet}
+La construction de notre solution s'amorce par le recensement des profils qui solliciteront la plateforme. Les exigences seront ensuite catégorisées selon deux axes : d'une part les capacités opérationnelles offertes aux utilisateurs, d'autre part les critères de qualité que le système doit respecter. La totalité de ces spécifications sera formalisée au sein d'un carnet de produit (Product Backlog) structuré.
+
+\section{Identification des acteurs}
+Au sein de l'environnement de gestion urbaine que nous concevons, le terme « acteur » fait référence à tout profil humain ou service tiers susceptible d'exploiter les ressources de la plateforme. Chaque catégorie d'acteur bénéficie de privilèges distincts et d'un périmètre fonctionnel calibré selon son rôle. Quatre grandes familles d'intervenants se dégagent :
+
+\subsection{L'acteur Citoyen peut :}
 \begin{itemize}
-    \item \textbf{Le Citoyen} : Utilise l'application mobile Flutter pour signaler des incidents géolocalisés avec photo, suivre le statut de résolution (fixé ou non) directement sur la carte, laisser des commentaires, et donner son avis sur la réparation finale (\textit{review fixes}).
-    \item \textbf{L'Administrateur municipal} : Utilise l'application web Angular pour gérer Keycloak (créer/gérer les comptes des Départements), affecter les interventions, valider/rejeter les preuves de fixation (avec motif obligatoire), analyser la Heatmap, suivre la timeline d'évolution détaillée, recevoir des e-mails d'alertes lors de nouveaux signalements, et exporter les rapports hebdomadaires et fiches d'incidents sous format PDF.
-    \item \textbf{Le Département municipal (Agent d'intervention)} : Utilise l'application mobile Flutter pour se connecter via un compte créé par l'admin, consulter ses missions de voirie affectées, effectuer les travaux et soumettre la photo preuve de résolution sur site.
-    \item \textbf{Le Système d'IA (YOLO)} : Traite l'image soumise pour classifier automatiquement l'incident.
+    \item Créer un compte utilisateur directement via l'application mobile ou l'interface web pour accéder aux services proposés.
+    \item Se connecter de façon protégée grâce au dispositif d'authentification unique Keycloak SSO.
+    \item Actualiser les informations personnelles rattachées à son espace utilisateur.
+    \item Soumettre un signalement localisé par coordonnées GPS, soit en prenant une photo avec la caméra de l'application Flutter, soit en téléversant une image depuis l'interface web.
+    \item Bénéficier d'une analyse automatique de la photo par le modèle YOLOv8 afin de proposer une catégorie d'incident et un score de confiance.
+    \item Rectifier les éléments d'un signalement tant que celui-ci n'a pas encore été pris en charge.
+    \item Contribuer aux discussions en rédigeant des commentaires sur les fiches d'incidents publiées.
+    \item Consulter les détails d'un incident, notamment la photo, la localisation, la catégorie, le statut et l'historique d'évolution.
+    \item Retrouver l'ensemble de ses déclarations dans la rubrique \textit{My Reports}, présentées en mode liste ou projetées sur un fond cartographique.
+    \item Suivre en temps réel la progression des travaux correctifs à travers la représentation spatiale de la ville.
+    \item Explorer la cartographie interactive pour prendre connaissance de tous les incidents répertoriés.
+    \item Ouvrir un fil de support privé et échanger des messages avec l'administration communale.
+    \item Formuler une appréciation sur la réparation de ses incidents finalisés.
+    \item Consulter son score citoyen ainsi que le cumul de ses points d'engagement.
 \end{itemize}
 
-\subsection{Les besoins fonctionnels}
-Les besoins fonctionnels décrivent les capacités opérationnelles que doit fournir le système :
+\subsection{L'acteur Service technique (rôle DEPARTMENT) peut :}
 \begin{itemize}
-    \item \textbf{Gestion d'Identité et Rôles} : Inscription/connexion SSO (Keycloak) pour les citoyens et agents techniques (les comptes Département étant créés manuellement par l'Administrateur).
-    \item \textbf{Signalement \& IA (Citoyen)} : Envoi de signalement (photo, localisation Leaflet, classement automatique par YOLO).
-    \item \textbf{Commentaires et Revue (Citoyen)} : Ajout de commentaires sur les incidents et validation ou avis après résolution (\textit{review fixes}).
-    \item \textbf{Timeline d'Évolution (Admin)} : Fil de vie historique complet (soumission, affectation, réparation, validation/rejet) pour chaque incident, accessible uniquement par l'Administrateur.
-    \item \textbf{Affectation \& Modération (Admin)} : Transmission du problème au département idoine ; vérification de la preuve de fixation avec droit d'acceptation ou de rejet motivé (raison obligatoire).
-    \item \textbf{Reporting \& Export (Admin)} : Tableau de bord analytique, export hebdomadaire (Excel) et génération de rapports de synthèse au format PDF.
-    \item \textbf{Alertes Système} : Envoi instantané d'une notification e-mail à l'Admin lors d'un nouveau signalement citoyen.
-    \item \textbf{Opérations terrain (Département)} : Consultation des tâches affectées et transmission de la photo preuve de résolution.
+    \item Se connecter au portail web Angular avec le rôle \texttt{DEPARTMENT}.
+    \item Consulter les incidents affectés à son service (Voirie, Éclairage, Eau, etc.).
+    \item Examiner le détail de chaque signalement (coordonnées, photo d'origine, historique d'audit).
+    \item Soumettre une photo de preuve de réparation (\texttt{department-fix}) lorsque l'incident est au statut \texttt{ASSIGNED}.
 \end{itemize}
 
-\subsection{Les besoins non fonctionnels}
-Les besoins non fonctionnels décrivent les caractéristiques de qualité de notre plateforme :
+\subsection{L'acteur Administrateur Municipal peut :}
 \begin{itemize}
-    \item \textbf{Sécurité} : Authentification OAuth2/OIDC gérée centralement par Keycloak pour sécuriser les flux de données.
-    \item \textbf{Performance} : Rendu fluide et rapide de la carte thermique et des points, même avec un grand nombre d'incidents (grâce aux index GIST spatiaux sous PostGIS).
-    \item \textbf{Ergonomie} : Interface adaptative (\textit{responsive}) respectant les standards du mobile-first pour faciliter l'utilisation sur le terrain.
+    \item Gérer l'ensemble des comptes utilisateurs et paramétrer les droits d'accès attribués aux agents de terrain.
+    \item Configurer les profils de rôles et distribuer les habilitations nécessaires à l'utilisation de l'interface web.
+    \item Valider, rejeter ou affecter les signalements citoyens aux services municipaux compétents.
+    \item Superviser la clôture des interventions en validant ou en refusant les justificatifs de réparation soumis.
+    \item Fournir obligatoirement une justification écrite en cas de refus d'une preuve de fixation.
+    \item Consulter les tickets de support ouverts par les citoyens, répondre aux messages privés et clôturer les fils traités.
+    \item Parcourir le journal d'activité global de la plateforme et prendre connaissance des alertes système réservées aux nouveaux signalements à vérifier.
+    \item Disposer d'un tableau de bord analytique avec carte de chaleur (agrégation des coordonnées d'incidents) et indicateurs SLA.
+    \item Produire des rapports PDF (fiche d'incident ou bilan périodique) et consulter les statistiques de transparence publique.
 \end{itemize}
 
-% ------------------------------------------------------------------------------
-% 2. STRUCTURE ET DÉCOUPAGE DU PROJET
-% ------------------------------------------------------------------------------
-\section{Structure et découpage du projet}
-
-\subsection{Identification de l'équipe SCRUM}
-L'organisation de notre projet s'articule autour des rôles SCRUM suivants :
+\subsection{Visiteur non connecté peut :}
 \begin{itemize}
-    \item \textbf{Product Owners} : Dhia Fersi \& Mohamed Iyed Amiri (en collaboration avec l'encadrant professionnel Rami Bouafif de HRMAPS qui a spécifié les priorités).
-    \item \textbf{Scrum Masters} : Dhia Fersi \& Mohamed Iyed Amiri (partage du rôle pour orchestrer le projet).
-    \item \textbf{Équipe de Développement} : Dhia Fersi (spécialisé Backend \& PostGIS / IA) \& Mohamed Iyed Amiri (spécialisé Frontend Angular \& Leaflet / Keycloak).
+    \item Accéder à la page d'accueil et à la \textbf{carte publique} sans créer de compte ni se connecter.
+    \item Consulter les incidents affichés sur la carte via les endpoints publics (\texttt{GET /api/public/**}).
+    \item Visualiser le classement des contributeurs (leaderboard) exposé publiquement.
 \end{itemize}
 
-\subsection{Découpage des sprints}
-Afin de livrer régulièrement des incréments logiciels fonctionnels, nous avons découpé le projet en 5 sprints majeurs (chacun d'une durée de 2 semaines) :
+\section{Les besoins non fonctionnels}
+Pour garantir la pérennité, la solidité et l'agrément d'utilisation de l'écosystème SafeCity-Connect, un ensemble de contraintes transversales s'impose au-delà des fonctionnalités métier. Ces exigences portent sur les aspects de réactivité, de protection des données et de capacité d'évolution :
 \begin{itemize}
-    \item \textbf{Sprint 0} : Mise en place de l'architecture logicielle, infrastructure Docker et technologies de développement.
-    \item \textbf{Sprint 1} : Inscription, Authentification unifiée, Gestion de profil et Sécurité via Keycloak.
-    \item \textbf{Sprint 2} : Espace Citoyen -- Gestion des Signalements, intégration cartographique Leaflet et analyse photo IA (YOLO).
-    \item \textbf{Sprint 3} : Espace Administration -- Tableau de bord, Carte de chaleur spatiale (\textit{Heatmap}) PostGIS et outils de statistiques.
-    \item \textbf{Sprint 4} : Espace Gamification -- Historique citoyen, gestion des points d'impact et validation globale.
+    \item \textbf{Maintenabilité} : Le code source doit adopter une architecture modulaire accompagnée d'une documentation rigoureuse, de sorte que toute évolution ultérieure des composants Angular, Spring Boot, Flutter et Python reste aisée.
+    \item \textbf{Ergonomie et Convivialité} : Les interfaces web et mobiles doivent offrir une navigation intuitive et inclusive, garantissant une prise en main immédiate quel que soit le profil de l'utilisateur.
+    \item \textbf{Fiabilité et Tolérance aux pannes} : La plateforme doit conserver un fonctionnement nominal même sous forte sollicitation, en particulier lors de l'envoi de photographies haute définition et du calcul des scores d'engagement.
+    \item \textbf{Performance et Rapidité} : Les délais de réponse API doivent rester faibles ; la heatmap et la détection de doublons s'appuient sur des requêtes indexées sur \texttt{status} et les coordonnées.
+    \item \textbf{Sécurité des données} : Toute communication avec les APIs doit être strictement encadrée par Keycloak au travers du protocole OAuth2 / OIDC (incluant PKCE pour les clients mobiles), et l'intégralité des échanges réseau doit transiter via HTTPS.
 \end{itemize}
 
-\subsection{Le Backlog du produit}
-Le tableau \ref{tab:backlog_produit} résume les récits utilisateurs (\textit{User Stories}) du Backlog Produit :
+\section{Product Backlog}
+En accord avec les principes de la méthodologie Scrum, le Product Backlog constitue le référentiel central et évolutif qui recense la totalité des fonctionnalités attendues. Dans le contexte de SafeCity-Connect, ce répertoire rassemble chaque besoin formulé sous la forme d'une User Story, hiérarchisée en fonction de sa valeur métier et de son niveau d'effort technique.
 
-\begin{table}[H]
-    \centering
-    \caption{Backlog de Produit SafeCity-Connect}
-    \label{tab:backlog_produit}
-    \vspace{0.2cm}
-    \small
-    \begin{tabularx}{\textwidth}{l p{7.5cm} c c c}
-        \toprule
-        \textbf{ID} & \textbf{User Story (En tant que... Je veux... Afin de...)} & \textbf{Priorité} & \textbf{Complexité} & \textbf{Sprint} \\
-        \midrule
-        \textbf{US01} & Déployer l'architecture globale conteneurisée. & Haute & 5 & Sprint 0 \\
-        \textbf{US02} & M'inscrire, me connecter et gérer mon profil (Citoyen/Dept). & Haute & 8 & Sprint 1 \\
-        \textbf{US03} & Créer et gérer les comptes des agents techniques (Admin). & Moyenne & 3 & Sprint 1 \\
-        \textbf{US04} & Signaler un incident avec géo-localisation et photo IA. & Haute & 13 & Sprint 2 \\
-        \textbf{US05} & Consulter le statut de résolution (fixé/non fixé) sur la carte. & Haute & 3 & Sprint 2 \\
-        \textbf{US06} & Affecter des incidents aux départements techniques (Admin). & Haute & 5 & Sprint 3 \\
-        \textbf{US07} & Exporter les incidents hebdomadaires et fiches PDF (Admin). & Moyenne & 8 & Sprint 3 \\
-        \textbf{US08} & Recevoir des alertes par e-mail lors de signalements. & Moyenne & 5 & Sprint 3 \\
-        \textbf{US09} & Uploader une photo preuve de résolution (Département). & Haute & 8 & Sprint 4 \\
-        \textbf{US10} & Accepter ou rejeter la fixation avec motif (Admin). & Haute & 8 & Sprint 4 \\
-        \textbf{US11} & Échanger des commentaires et évaluer les réparations (Citoyen). & Moyenne & 8 & Sprint 4 \\
-        \bottomrule
-    \end{tabularx}
-\end{table}
+Le tableau ci-après expose l'intégralité du carnet de produit élaboré pour notre projet, détaillant les User Stories ventilées à travers les six itérations de développement prévues.
 
-\subsection{Planification des releases}
-Notre projet prévoit une release intermédiaire après le Sprint 2 (version citoyenne fonctionnelle avec signalement IA) et une release finale de production à la fin du Sprint 4 (version complète avec dashboard d'administration et de gamification).
+\begin{center}
+\scriptsize
+\renewcommand{\arraystretch}{1.3} % Pour une meilleure aération des lignes
+\begin{xltabular}{\textwidth}{|c|X|c|c|}
+    \caption{Product Backlog complet de SafeCity-Connect} \label{tab:backlog_produit_final} \\
+    \hline
+    \textbf{ID} & \textbf{User Story (Description)} & \textbf{Priorité} & \textbf{Complexité} \\ \hline
+    \endfirsthead
+    
+    \multicolumn{4}{c}%
+    {{\bfseries TABLE \thetable\ -- Suite du Product Backlog complet}} \\
+    \hline
+    \textbf{ID} & \textbf{User Story (Description)} & \textbf{Priorité} & \textbf{Complexité} \\ \hline
+    \endhead
+    
+    \hline
+    \multicolumn{4}{r}{{Suite à la page suivante...}} \\
+    \endfoot
+    
+    \hline
+    \endlastfoot
+    
+    % --- Sprint 1 ---
+    \multicolumn{4}{|c|}{\cellcolor{gray!15}\textbf{Sprint 1 : Documentation et Configuration}} \\ \hline
+    \textbf{US-01} & En tant qu'équipe projet, nous pouvons élaborer le backlog produit afin de planifier les fonctionnalités du système. & Haute & Moyenne \\ \hline
+    \textbf{US-02} & En tant qu'équipe, nous pouvons choisir les technologies (Spring Boot, Angular, Flutter, YOLOv8) afin de préparer le socle. & Haute & Moyenne \\ \hline
+    \textbf{US-03} & En tant que développeur, je peux installer les IDEs (IntelliJ IDEA, VS Code, Android Studio) afin de démarrer le code. & Moyenne & Faible \\ \hline
+    \textbf{US-04} & En tant que développeur, je peux configurer PostgreSQL avec l'extension PostGIS afin de préparer la persistance géographique du système. & Haute & Moyenne \\ \hline
+    \textbf{US-05} & En tant que développeur, je peux configurer Keycloak avec Docker afin d'assurer l'authentification. & Haute & Moyenne \\ \hline
+    \textbf{US-06} & En tant qu'équipe projet, nous pouvons apprendre LaTeX afin de rédiger et structurer notre rapport de PFE. & Moyenne & Faible \\ \hline
+    \textbf{US-07} & En tant qu'équipe, nous pouvons étudier les modèles d'IA YOLOv8 afin de préparer la classification automatique. & Moyenne & Moyenne \\ \hline
 
-\subsection{Diagramme de cas d'utilisation global}
-Le diagramme de cas d'utilisation global modélise l'ensemble des interactions fonctionnelles autorisées pour chaque acteur (voir Figure \ref{fig:uc_global}).
+    % --- Sprint 2 ---
+    \multicolumn{4}{|c|}{\cellcolor{gray!15}\textbf{Sprint 2 : Gestion d'Accès et de Profil}} \\ \hline
+    \textbf{US-08} & En tant que citoyen, je veux créer un compte mobile afin d'accéder aux services de signalement. & Haute & Moyenne \\ \hline
+    \textbf{US-09} & En tant qu'utilisateur, je veux me connecter de façon unifiée via Keycloak SSO pour accéder à mon espace sécurisé. & Haute & Faible \\ \hline
+    \textbf{US-10} & En tant qu'admin, je peux créer des comptes Keycloak (rôles ADMIN, DEPARTMENT) pour les services techniques. & Moyenne & Haute \\ \hline
+    \textbf{US-11} & En tant qu'admin, je peux activer ou désactiver les comptes utilisateurs pour sécuriser l'accès au système. & Moyenne & Moyenne \\ \hline
+    \textbf{US-12} & En tant qu'utilisateur, je veux modifier mes informations de profil afin de les maintenir à jour. & Faible & Faible \\ \hline
+    \textbf{US-13} & En tant que citoyen, je veux consulter mon profil pour visualiser mon score, mes statistiques et mes points d'impact. & Faible & Faible \\ \hline
+
+    % --- Sprint 3 ---
+    \multicolumn{4}{|c|}{\cellcolor{gray!15}\textbf{Sprint 3 : Gestion des Incidents et de la Carte}} \\ \hline
+    \textbf{US-14} & En tant qu'utilisateur, je veux consulter les détails d'un incident (photo, localisation, catégorie, historique et statut) pour m'informer. & Haute & Faible \\ \hline
+    \textbf{US-15} & En tant que visiteur, citoyen ou utilisateur connecté, je veux consulter la carte publique des incidents sans authentification afin de repérer les anomalies signalées. & Haute & Moyenne \\ \hline
+    \textbf{US-16} & En tant que citoyen, je veux signaler un incident géolocalisé avec une photo prise par la caméra Flutter ou téléversée depuis le web afin de solliciter l'intervention de la mairie. & Haute & Moyenne \\ \hline
+    \textbf{US-17} & En tant que citoyen, je veux modifier mon signalement non validé pour corriger ou compléter les détails fournis. & Moyenne & Moyenne \\ \hline
+    \textbf{US-18} & En tant qu'admin, je peux rejeter et supprimer un signalement invalide pour maintenir la base propre. & Moyenne & Faible \\ \hline
+    \textbf{US-19} & En tant que visiteur ou citoyen, je veux filtrer les incidents sur la carte selon leur statut (en attente, validé, assigné, résolu ou rejeté) afin de distinguer les anomalies encore actives de celles déjà traitées. & Haute & Moyenne \\ \hline
+    \textbf{US-20} & En tant qu'utilisateur, je veux rechercher un incident par adresse ou catégorie pour le retrouver rapidement. & Haute & Moyenne \\ \hline
+    \textbf{US-21} & En tant que citoyen, je veux consulter la rubrique \textit{My Reports} afin de retrouver uniquement les incidents que j'ai moi-même déclarés. & Haute & Faible \\ \hline
+    \textbf{US-22} & En tant que citoyen, je veux voir le statut détaillé de chacun de mes signalements (PENDING, VALIDATED, ASSIGNED, FIX\_SUBMITTED, RESOLVED ou REJECTED) afin de suivre son avancement sans passer par l'administration. & Haute & Faible \\ \hline
+    \textbf{US-23} & En tant que citoyen, je veux ajouter des commentaires sur un incident afin d'apporter des précisions ou de participer à la discussion publique. & Moyenne & Faible \\ \hline
+    \textbf{US-24} & En tant qu'utilisateur, je veux consulter la landing page d'accueil web pour découvrir la présentation du projet. & Haute & Faible \\ \hline
+
+    % --- Sprint 4 ---
+    \multicolumn{4}{|c|}{\cellcolor{gray!15}\textbf{Sprint 4 : Gestion des Missions et Interventions}} \\ \hline
+    \textbf{US-25} & En tant qu'admin, je veux affecter un incident validé à un département technique spécifique pour planifier la réparation. & Haute & Moyenne \\ \hline
+    \textbf{US-26} & En tant qu'admin, je veux réaffecter un incident à un autre département en cas d'erreur de planification. & Moyenne & Moyenne \\ \hline
+    \textbf{US-27} & En tant que service technique (DEPARTMENT), je veux soumettre une photo de preuve de réparation via le portail web. & Haute & Moyenne \\ \hline
+    \textbf{US-28} & En tant que service technique, je veux consulter la liste des incidents affectés à mon département. & Haute & Faible \\ \hline
+    \textbf{US-29} & En tant qu'admin, je veux valider ou refuser le correctif soumis (FIX\_SUBMITTED). & Haute & Moyenne \\ \hline
+    \textbf{US-30} & En tant qu'admin, je veux consulter l'état d'avancement de toutes les interventions pour superviser l'activité globale. & Haute & Moyenne \\ \hline
+    \textbf{US-31} & En tant qu'admin, je veux examiner les photos (avant et après travaux) pour vérifier la qualité de la réparation. & Haute & Haute \\ \hline
+    \textbf{US-32} & En tant qu'admin, je veux valider la résolution de l'incident ou rejeter le correctif pour exiger une ré-intervention. & Haute & Moyenne \\ \hline
+    \textbf{US-33} & En tant qu'admin, je veux saisir obligatoirement un motif textuel en cas de rejet d'une réparation pour informer l'équipe. & Moyenne & Faible \\ \hline
+    \textbf{US-34} & En tant qu'admin, je veux filtrer les incidents par statut ou catégorie sur le portail web. & Moyenne & Moyenne \\ \hline
+    \textbf{US-35} & En tant que système, je veux détecter automatiquement les doublons géospatiaux pour éviter les signalements répétés. & Haute & Haute \\ \hline
+
+    % --- Sprint 5 ---
+    \multicolumn{4}{|c|}{\cellcolor{gray!15}\textbf{Sprint 5 : Rapports et Dashboards}} \\ \hline
+    \textbf{US-36} & En tant qu'admin, je veux consulter un tableau de bord analytique complet afin d'analyser les indicateurs de performance (SLA). & Haute & Haute \\ \hline
+    \textbf{US-37} & En tant qu'admin, je veux consulter la heatmap (agrégation lat/lng) sur le tableau de bord Leaflet. & Haute & Haute \\ \hline
+    \textbf{US-38} & En tant qu'admin, je veux générer un rapport PDF (période ou fiche incident). & Moyenne & Faible \\ \hline
+    \textbf{US-39} & En tant qu'admin, je veux consulter les statistiques publiques (TransparencyService) et indicateurs SLA. & Moyenne & Faible \\ \hline
+    \textbf{US-40} & En tant que citoyen, je veux consulter les statistiques publiques de transparence (nombre d'incidents, résolutions, rejets et délai moyen) afin d'évaluer l'efficacité du service municipal. & Moyenne & Moyenne \\ \hline
+    \textbf{US-41} & En tant que citoyen rapporteur, je veux évaluer la qualité de la réparation de mon incident résolu en attribuant une note par étoiles. & Moyenne & Moyenne \\ \hline
+
+    % --- Sprint 6 ---
+    \multicolumn{4}{|c|}{\cellcolor{gray!15}\textbf{Sprint 6 : Intelligence Artificielle, Support et Alertes Admin}} \\ \hline
+    \textbf{US-42} & En tant qu'admin, je veux recevoir une alerte système lorsqu'un citoyen soumet un nouveau report afin de le vérifier rapidement. & Haute & Faible \\ \hline
+    \textbf{US-43} & En tant qu'admin, je veux consulter la liste des alertes liées aux reports en attente afin de prioriser les signalements à traiter. & Haute & Faible \\ \hline
+    \textbf{US-44} & En tant qu'admin, je veux accéder directement au détail du report depuis l'alerte afin de le valider, le rejeter ou l'affecter. & Haute & Faible \\ \hline
+    \textbf{US-45} & En tant que citoyen, je veux créer un ticket de support privé avec un sujet et, si nécessaire, le lier à un incident existant afin de contacter l'administration. & Haute & Faible \\ \hline
+    \textbf{US-46} & En tant que citoyen, je veux consulter mes tickets de support et lire les messages de l'administration afin de suivre mes demandes d'assistance. & Haute & Faible \\ \hline
+    \textbf{US-47} & En tant qu'admin, je veux consulter tous les tickets, répondre aux citoyens par message privé et clôturer les fils traités. & Haute & Moyenne \\ \hline
+    \textbf{US-48} & En tant que citoyen, je veux consulter les conseils civiques (SmartCityTip) sur le tableau de bord public. & Moyenne & Moyenne \\ \hline
+    \textbf{US-49} & En tant que système, je veux classifier automatiquement les photos soumises par YOLOv8 (\texttt{ai\_category}, \texttt{ai\_confidence}) afin d'assister la catégorisation des incidents. & Haute & Haute \\ \hline
+    \textbf{US-50} & En tant que système, je veux enregistrer les alertes administrateur liées aux nouveaux reports afin de tracer les signalements à vérifier. & Moyenne & Moyenne \\ \hline
+    \textbf{US-51} & En tant que système, je veux octroyer automatiquement +10 points d'impact civique au citoyen dès que son signalement est validé. & Haute & Haute \\ \hline
+\end{xltabular}
+\end{center}
+
+\section{Planification des sprints}
+L'ordonnancement temporel représente un pilier fondamental de l'approche Scrum, permettant de fragmenter l'effort de réalisation en itérations brèves (sprints) et de livrer régulièrement des incréments fonctionnels validés. Le calendrier de SafeCity-Connect repose sur deux Releases principales, déclinées en six sprints d'une durée de deux semaines chacun. Ce séquençage graduel vise à maîtriser la complexité et à limiter l'exposition aux aléas techniques.
+
+La figure ci-dessous retrace le découpage en releases et la distribution des sprints définis dans le cadre de notre projet de fin d'études :
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{use_case_global.jpg}
-    \caption{Diagramme de cas d'utilisation global de la plateforme}
-    \label{fig:uc_global}
+    \includegraphics[width=\linewidth]{organisation_releases.png}
+    \caption{Organisation des releases}
+    \label{fig:planification_releases_sprints}
 \end{figure}
 
-\subsection{Diagramme de classe global (initial)}
-Le diagramme de classe global initial présente la structure conceptuelle des données et les relations métiers qui seront stockées en base de données (voir Figure \ref{fig:classes_global}).
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{classes_global.jpg}
-    \caption{Diagramme de classes global initial}
-    \label{fig:classes_global}
-\end{figure}
+Grâce à cette organisation, nous avons pu cadencer de manière rigoureuse les phases de développement, harmoniser les travaux menés en parallèle sur le front-end web, le back-end et les composants mobiles, tout en assurant la tenue systématique de démonstrations et de revues à l'issue de chaque sprint.
 
 \section*{Conclusion}
-\addcontentsline{toc}{section}{Conclusion}
-Ce deuxième chapitre nous a permis de structurer la planification agile du projet en identifiant l'équipe SCRUM, en découpant le projet en Sprints opérationnels, et en formalisant le Backlog de produit. Nous avons également établi la modélisation fonctionnelle et conceptuelle globale de \textit{SafeCity-Connect}. Le chapitre suivant détaillera le Sprint 0, consacré à la mise en place de notre architecture logicielle et de nos outils de développement.
+L'examen approfondi des exigences fonctionnelles et des contraintes qualitatives a abouti à la constitution d'un Product Backlog solide comptant 51 User Stories, distribuées de manière équilibrée sur six itérations. Le chapitre suivant se consacre aux décisions architecturales et aux réalisations techniques relatives à la première livraison de notre écosystème applicatif (Release 1).

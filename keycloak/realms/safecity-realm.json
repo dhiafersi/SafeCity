@@ -3,7 +3,7 @@
   "enabled": true,
   "displayName": "SafeCity Connect",
   "sslRequired": "none",
-  "registrationAllowed": true,
+  "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,

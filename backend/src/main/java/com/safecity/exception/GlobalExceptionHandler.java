@@ -6,6 +6,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -35,6 +36,14 @@ public class GlobalExceptionHandler {
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("errors", errors);
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(WebClientResponseException.class)
+    public ResponseEntity<Map<String, Object>> handleExternalService(WebClientResponseException ex) {
+        if (ex.getStatusCode().is4xxClientError()) {
+            return body(HttpStatus.valueOf(ex.getStatusCode().value()), "Identity service rejected the request");
+        }
+        return body(HttpStatus.BAD_GATEWAY, "Identity service is unavailable");
     }
 
     @ExceptionHandler(Exception.class)

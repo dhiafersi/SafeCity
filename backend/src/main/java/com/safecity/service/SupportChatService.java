@@ -20,6 +20,7 @@ public class SupportChatService {
 
     private final SupportThreadRepository threadRepository;
     private final SupportMessageRepository messageRepository;
+    private final EmailNotificationService emailNotificationService;
 
     @Transactional
     public SupportThreadResponse createThread(SupportThreadRequest request, String keycloakId, String username) {
@@ -31,13 +32,19 @@ public class SupportChatService {
             .status(SupportThreadStatus.OPEN)
             .build());
 
-        messageRepository.save(SupportMessage.builder()
+        SupportMessage msg = messageRepository.save(SupportMessage.builder()
             .threadId(thread.getId())
             .senderKeycloakId(keycloakId)
             .senderUsername(username)
             .senderRole("CITIZEN")
             .body(request.getMessage().trim())
             .build());
+
+        try {
+            emailNotificationService.sendSupportMessageAlert(thread, msg);
+        } catch (Exception e) {
+            // Log error but don't fail transaction
+        }
 
         return toThreadResponse(thread, request.getMessage().trim());
     }
@@ -103,6 +110,12 @@ public class SupportChatService {
 
         if ("ADMIN".equals(role) && thread.getCitizenKeycloakId() != null) {
             // Notify citizen via email if we had their email – optional future
+        } else if ("CITIZEN".equals(role)) {
+            try {
+                emailNotificationService.sendSupportMessageAlert(thread, msg);
+            } catch (Exception e) {
+                // Log or ignore alert error
+            }
         }
 
         return toMessageResponse(msg);

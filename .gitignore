@@ -49,3 +49,12 @@ yarn-error.log*
 __pycache__/
 .pytest_cache/
 
+# Temporary utility scripts and prompts
+/extract.js
+/extract_*.py
+/read_pdf.py
+/search_backlog*.py
+/untruncated_prompt.txt
+/error.txt
+
+

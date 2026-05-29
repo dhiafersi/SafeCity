@@ -2,6 +2,8 @@ package com.safecity.service;
 
 import com.safecity.domain.Incident;
 import com.safecity.domain.IncidentStatus;
+import com.safecity.domain.SupportThread;
+import com.safecity.domain.SupportMessage;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,9 @@ public class EmailNotificationService {
 
     @Value("${spring.email-api.domain:}")
     private String emailDomain;
+
+    @Value("${safecity.alerts.recipient-email:fersidhia9@gmail.com}")
+    private String alertRecipientEmail;
 
     @Async
     public void sendReportEmail(String toEmail, String subject, byte[] pdfBytes, String filename) {
@@ -89,6 +94,16 @@ public class EmailNotificationService {
             sendViaAPI(incident.getReporterEmail(), subject, htmlBody, incident.getId());
         } catch (Exception e) {
             log.warn("Failed to send incident status update email for incident id={}: {}", incident.getId(), e.getMessage(), e);
+        }
+
+        if (alertRecipientEmail != null && !alertRecipientEmail.isBlank() && !alertRecipientEmail.equalsIgnoreCase(incident.getReporterEmail())) {
+            try {
+                String adminSubject = "SafeCity Alert: Incident #" + incident.getId() + " Status Changed to " + incident.getStatus();
+                String adminHtmlBody = buildAdminStatusChangeEmailBody(incident, previousStatus);
+                sendViaAPI(alertRecipientEmail, adminSubject, adminHtmlBody, incident.getId());
+            } catch (Exception e) {
+                log.warn("Failed to send admin incident status alert email for incident id={}: {}", incident.getId(), e.getMessage(), e);
+            }
         }
     }
 
@@ -227,5 +242,109 @@ public class EmailNotificationService {
 
     private String escapeJson(String input) {
         return input == null ? "" : input.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
+    }
+
+    @Async
+    public void sendNewIncidentAlert(Incident incident) {
+        if (alertRecipientEmail == null || alertRecipientEmail.isBlank()) {
+            log.debug("Skipping new incident alert: no recipient email configured");
+            return;
+        }
+
+        boolean isSmtp = "smtp".equalsIgnoreCase(emailProvider);
+        if (!isSmtp && (apiKey == null || apiKey.isBlank())) {
+            log.debug("Skipping new incident alert: EMAIL_API_KEY not configured");
+            return;
+        }
+
+        try {
+            String subject = "SafeCity Alert: New Incident Reported [#" + incident.getId() + "]";
+            String htmlBody = buildNewIncidentEmailBody(incident);
+            sendViaAPI(alertRecipientEmail, subject, htmlBody, incident.getId());
+        } catch (Exception e) {
+            log.warn("Failed to send new incident alert email for incident id={}: {}", incident.getId(), e.getMessage(), e);
+        }
+    }
+
+    @Async
+    public void sendSupportMessageAlert(SupportThread thread, SupportMessage message) {
+        if (alertRecipientEmail == null || alertRecipientEmail.isBlank()) {
+            log.debug("Skipping support message alert: no recipient email configured");
+            return;
+        }
+
+        boolean isSmtp = "smtp".equalsIgnoreCase(emailProvider);
+        if (!isSmtp && (apiKey == null || apiKey.isBlank())) {
+            log.debug("Skipping support message alert: EMAIL_API_KEY not configured");
+            return;
+        }
+
+        try {
+            String subject = "SafeCity Alert: New Support Message in Thread [#" + thread.getId() + "]";
+            String htmlBody = buildSupportMessageEmailBody(thread, message);
+            sendViaAPI(alertRecipientEmail, subject, htmlBody, thread.getRelatedIncidentId());
+        } catch (Exception e) {
+            log.warn("Failed to send support message alert email for thread id={}: {}", thread.getId(), e.getMessage(), e);
+        }
+    }
+
+    private String buildNewIncidentEmailBody(Incident incident) {
+        String title = incident.getTitle() != null ? incident.getTitle() : "No Title";
+        String category = incident.getCategory() != null ? incident.getCategory().name() : "No Category";
+        String desc = incident.getDescription() != null ? incident.getDescription() : "No Description";
+        String reporter = incident.getReporterUsername() != null ? incident.getReporterUsername() : "Anonymous";
+        String email = incident.getReporterEmail() != null ? incident.getReporterEmail() : "N/A";
+        String createdAt = incident.getCreatedAt() != null ? incident.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : "Unknown date";
+        String incidentUrl = String.format("%s/admin/incidents", "https://safecity.example.com");
+
+        return "<html><body>"
+            + "<h2>SafeCity Alert: New Incident Reported</h2>"
+            + "<p>A new incident has been reported on SafeCity.</p>"
+            + "<p><strong>Incident ID:</strong> #" + incident.getId() + "<br/>"
+            + "<strong>Title:</strong> " + escapeHtml(title) + "<br/>"
+            + "<strong>Category:</strong> " + escapeHtml(category) + "<br/>"
+            + "<strong>Reporter Username:</strong> " + escapeHtml(reporter) + " (" + escapeHtml(email) + ")<br/>"
+            + "<strong>Date:</strong> " + escapeHtml(createdAt) + "</p>"
+            + "<p><strong>Description:</strong><br/>" + escapeHtml(desc) + "</p>"
+            + "<p>Review this incident in the Admin Portal: <a href=\"" + incidentUrl + "\">" + incidentUrl + "</a></p>"
+            + "</body></html>";
+    }
+
+    private String buildSupportMessageEmailBody(SupportThread thread, SupportMessage message) {
+        String subject = thread.getSubject() != null ? thread.getSubject() : "No Subject";
+        String sender = message.getSenderUsername() != null ? message.getSenderUsername() : "Anonymous";
+        String role = message.getSenderRole() != null ? message.getSenderRole() : "CITIZEN";
+        String body = message.getBody() != null ? message.getBody() : "";
+        String relatedIncident = thread.getRelatedIncidentId() != null ? String.valueOf(thread.getRelatedIncidentId()) : "None";
+        String supportUrl = String.format("%s/admin/support", "https://safecity.example.com");
+
+        return "<html><body>"
+            + "<h2>SafeCity Alert: New Support Message</h2>"
+            + "<p>A new message has been posted in support thread <strong>#" + thread.getId() + "</strong>.</p>"
+            + "<p><strong>Thread Subject:</strong> " + escapeHtml(subject) + "<br/>"
+            + "<strong>Sender:</strong> " + escapeHtml(sender) + " (" + escapeHtml(role) + ")<br/>"
+            + "<strong>Related Incident ID:</strong> " + escapeHtml(relatedIncident) + "</p>"
+            + "<p><strong>Message Content:</strong><br/>" + escapeHtml(body) + "</p>"
+            + "<p>Reply to this support thread in the Admin Portal: <a href=\"" + supportUrl + "\">" + supportUrl + "</a></p>"
+            + "</body></html>";
+    }
+
+    private String buildAdminStatusChangeEmailBody(Incident incident, IncidentStatus previousStatus) {
+        String title = incident.getTitle() != null ? incident.getTitle() : "No Title";
+        String status = incident.getStatus().name();
+        String previous = previousStatus != null ? previousStatus.name() : "UNKNOWN";
+        String reporter = incident.getReporterUsername() != null ? incident.getReporterUsername() : "Anonymous";
+        String email = incident.getReporterEmail() != null ? incident.getReporterEmail() : "N/A";
+        String adminUrl = String.format("%s/admin/incidents", "https://safecity.example.com");
+
+        return "<html><body>"
+            + "<h2>SafeCity Alert: Incident Status Changed</h2>"
+            + "<p>Incident <strong>#" + incident.getId() + "</strong> status has been updated by the admin team.</p>"
+            + "<p><strong>Title:</strong> " + escapeHtml(title) + "<br/>"
+            + "<strong>Reporter:</strong> " + escapeHtml(reporter) + " (" + escapeHtml(email) + ")</p>"
+            + "<p><strong>Previous status:</strong> " + escapeHtml(previous) + "<br/>"
+            + "<strong>Current status:</strong> " + escapeHtml(status) + "</p>"
+            + "<p>View all incidents in the Admin Portal: <a href=\"" + adminUrl + "\">" + adminUrl + "</a></p>"
+            + "</body></html>";
     }
 }

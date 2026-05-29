@@ -54,6 +54,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/uploads/**").permitAll()
                 // Public map + leaderboard data for landing page
                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+
+                // Profile self-service
+                .requestMatchers("/api/profile/**").authenticated()
 
                 // AI analysis – citizens only
                 .requestMatchers(HttpMethod.POST, "/api/ai/**").hasRole("CITIZEN")

@@ -58,12 +58,16 @@ safecity:
   keycloak:
     base-url: ${KEYCLOAK_BASE_URL:http://localhost:8080}
     realm: safecity
+    admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+    admin-password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
   ai:
     simulation-enabled: ${SAFECITY_AI_SIMULATION:false}
     service-url: ${SAFECITY_AI_SERVICE_URL:http://localhost:8000}
     model: ${SAFECITY_AI_MODEL:openai/clip-vit-base-patch32}
   sla:
     hours: ${SAFECITY_SLA_HOURS:72}
+  alerts:
+    recipient-email: ${ALERT_RECIPIENT_EMAIL:fersidhia9@gmail.com}
   reports:
     admin-email: ${REPORT_ADMIN_EMAIL:admin1@safecity.local}
     schedule-enabled: ${REPORT_SCHEDULE_ENABLED:true}

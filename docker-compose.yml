@@ -72,6 +72,7 @@ services:
       EMAIL_API_URL: ${EMAIL_API_URL:-https://api.mailgun.net/v3}
       EMAIL_DOMAIN: ${EMAIL_DOMAIN:-your-mailgun-domain}
       EMAIL_FROM: ${EMAIL_FROM:-no-reply@safecity-connect.local}
+      ALERT_RECIPIENT_EMAIL: ${ALERT_RECIPIENT_EMAIL:-fersidhia9@gmail.com}
       SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-ab75a7001@smtp-brevo.com}

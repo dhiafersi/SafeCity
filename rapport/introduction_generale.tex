@@ -1,6 +1,6 @@
 % ==============================================================================
 % FICHIER : introduction_generale.tex
-% Description : Introduction Générale
+% Description : Introduction Générale du rapport SafeCity-Connect
 % Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
 % Organisme d'accueil : HRMAPS
 % ==============================================================================
@@ -8,24 +8,20 @@
 \chapter*{Introduction Générale}
 \addcontentsline{toc}{chapter}{Introduction Générale}
 
-De nos jours, l'urbanisation rapide et la croissance démographique constante dans les centres urbains posent des défis majeurs aux municipalités et aux autorités locales en matière de gestion des infrastructures et des services publics. La détérioration des chaussées (nids-de-poule, fissures), les fuites de réseaux d'eau, ou encore l'accumulation sauvage de déchets sont autant d'incidents du quotidien qui impactent négativement la qualité de vie des citadins et la sécurité publique.
+La progression rapide du paysage technologique contemporain a propulsé la transformation numérique au rang d'enjeu stratégique majeur pour l'ensemble des organisations, qu'elles relèvent du secteur public ou privé. Adopter des solutions informatiques performantes constitue aujourd'hui un levier indispensable pour se défaire des processus archaïques, accélérer le traitement de l'information et offrir aux citoyens des prestations fiables, agiles et en adéquation avec leurs attentes croissantes.
 
-Traditionnellement, la détection et le traitement de ces dysfonctionnements reposent sur des signalements physiques ou téléphoniques auprès des services municipaux, ou sur des tournées d'inspection planifiées. Ces processus manuels s'avèrent souvent lents, inefficaces, sujets à des erreurs de transmission et coûteux en ressources. De plus, ils manquent d'interactivité et de transparence, laissant les citoyens dans le flou quant au traitement de leurs requêtes.
+À cet égard, la gouvernance des espaces urbains et la gestion du domaine public appellent la mise en place de dispositifs technologiques novateurs favorisant l'implication collective. Les autorités municipales se trouvent en effet confrontées, au quotidien, à un éventail de dysfonctionnements sur la voie publique~-- nids-de-poule, ruptures de canalisations, pannes du réseau d'éclairage ou accumulations illicites de déchets~-- qui altèrent significativement la qualité de vie des résidents tout en générant des charges d'entretien considérables. Le paradigme des villes intelligentes (Smart Cities) offre des solutions tangibles à ces défis en promouvant une approche participative de la gestion urbaine, où le citoyen devient un acteur central du signalement et où les responsables territoriaux disposent d'outils analytiques robustes pour piloter les interventions.
 
-C'est dans ce contexte que s'inscrit le concept de la « Ville Intelligente » (Smart City), qui vise à utiliser les technologies de l'information et de la communication pour améliorer la qualité des services urbains et stimuler la participation active des citoyens. En transformant le citoyen d'un simple utilisateur en un acteur engagé (un « capteur humain »), les municipalités peuvent acquérir une visibilité en temps réel sur l'état de l'espace public.
+C'est précisément dans ce contexte que s'inscrit notre projet de fin d'études, réalisé au sein de l'entreprise \textbf{HRMAPS}. L'objectif principal a porté sur la conception et l'élaboration de \textbf{SafeCity-Connect} : une plateforme de signalement géolocalisé et de suivi des incidents urbains. Elle combine un \textbf{backend Spring Boot} monolithique, un portail \textbf{Angular~18} (carte publique sans connexion, espaces citoyen, administrateur et services techniques), une application \textbf{Flutter}, l'authentification \textbf{Keycloak}, une base \textbf{PostgreSQL/PostGIS} et un service \textbf{FastAPI/YOLOv8} pour la classification automatique des photos.
 
-Le projet \textbf{SafeCity-Connect} a été conçu pour répondre à cette problématique. Il s'agit d'une plateforme citoyenne innovante de signalement et d'analyse des incidents urbains. Elle permet aux résidents de signaler instantanément des anomalies via une application web responsive et interactive. Pour optimiser le traitement de ces signalements, la plateforme intègre un module d'Intelligence Artificielle basé sur le modèle de détection d'objets \textbf{YOLO} (You Only Look Once), qui catégorise automatiquement les anomalies à partir des photos fournies. De plus, elle fournit aux administrateurs municipaux un tableau de bord analytique équipé d'une carte thermique prédictive (Heatmap) facilitant la planification urbaine et l'allocation des équipes d'intervention.
+Ce rapport retrace de façon détaillée l'ensemble des étapes de réalisation et de maturation de ce projet. Sa structure se décline selon l'articulation suivante :
 
-Ce rapport détaille la démarche complète d'analyse, de conception et de réalisation de la plateforme \textit{SafeCity-Connect}. Il s'articule autour de sept chapitres principaux :
+Le premier chapitre, \textbf{« Présentation du cadre du projet »}, expose l'organisme d'accueil \textbf{HRMAPS} ainsi que son fonctionnement interne. Il dresse un état des lieux critique des pratiques existantes afin de mettre en lumière leurs limites et de légitimer la solution envisagée. Ce chapitre précise en outre les orientations méthodologiques retenues (associant Scrum et UML), les ressources matérielles mobilisées et le schéma d'architecture n-tiers adopté.
 
-\begin{itemize}
-    \item \textbf{Le Chapitre 1 (Étude préalable)} présente l'organisme d'accueil \textbf{HRMAPS}, expose la problématique de la gestion urbaine traditionnelle, et introduit notre solution proposée.
-    \item \textbf{Le Chapitre 2 (Planification \& architecture)} détaille la spécification des besoins, la constitution de l'équipe SCRUM, le découpage des sprints et le Backlog Produit global.
-    \item \textbf{Le Chapitre 3 (Sprint 0)} expose la conception architecturale multiniveau sécurisée (OAuth2/OIDC) et détaille nos outils et frameworks de développement (Spring Boot, Angular, Keycloak, PostGIS, YOLO).
-    \item \textbf{Le Chapitre 4 (Sprint 1)} se concentre sur la réalisation de la brique de sécurité gérant l'inscription, la connexion SSO avec Keycloak et la gestion des profils.
-    \item \textbf{Le Chapitre 5 (Sprint 2)} détaille la mise en œuvre de la géo-localisation interactive avec la carte Leaflet et la classification photo automatisée par l'IA YOLO.
-    \item \textbf{Le Chapitre 6 (Sprint 3)} présente la console d'administration municipale équipée de la carte de chaleur spatiale (\textit{Heatmap}) PostGIS et de rapports statistiques.
-    \item \textbf{Le Chapitre 7 (Sprint 4)} expose l'espace de gamification récompensant le civisme actif par des points d'impact et gérant l'historique des signalements.
-\end{itemize}
+Le deuxième chapitre, intitulé \textbf{« Analyse et spécification des besoins »}, procède au recensement des acteurs impliqués, à la formalisation des exigences fonctionnelles et non fonctionnelles du système, et à l'ordonnancement des travaux au travers du carnet de produit (Product Backlog).
 
-Enfin, une conclusion générale récapitulera les résultats obtenus et ouvrira des perspectives d'évolution pour le système.
+Le troisième chapitre, dédié à la \textbf{« Release 1 : Gestion d'accès, profils et sécurité »}, décrit l'édification du socle sécuritaire centralisé fondé sur \textbf{Keycloak}, l'administration des profils utilisateurs, et les premières briques d'implémentation (Sprint 0 et livrables fondamentaux).
+
+Le quatrième chapitre, portant sur la \textbf{« Release 2 : Gestion avancée, rapports et intelligence artificielle »}, traite de l'affectation aux services techniques, des preuves de réparation, des tableaux de bord et heatmap, de la classification YOLOv8, des alertes administrateur dédiées aux nouveaux reports à vérifier, du support par tickets et de la gamification (+10 points à la validation).
+
+Pour clore ce mémoire, une conclusion générale synthétise les résultats obtenus au regard des objectifs fixés et esquisse les axes d'amélioration et d'extension envisageables pour le projet.

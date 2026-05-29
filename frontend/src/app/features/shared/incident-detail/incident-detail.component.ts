@@ -193,7 +193,7 @@ export class IncidentDetailComponent implements OnInit {
   fixPhoto?: File;
   assignmentNote = '';
   assignedDepartment = 'Roads';
-  departments = ['Roads', 'Lighting', 'Waste', 'Water', 'Safety', 'Parks'];
+  departments = ['Roads', 'Water', 'Lighting', 'Waste', 'Parks', 'Traffic'];
 
   constructor(
     private route: ActivatedRoute,

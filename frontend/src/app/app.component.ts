@@ -44,6 +44,9 @@ import { AuthService } from './core/services/auth.service';
             <a routerLink="/admin/incidents" routerLinkActive="active">📋 Incidents</a>
           </li>
           <li *ngIf="auth.hasRole('ADMIN')">
+            <a routerLink="/admin/users" routerLinkActive="active">Users</a>
+          </li>
+          <li *ngIf="auth.hasRole('ADMIN')">
             <a routerLink="/admin/support" routerLinkActive="active">Support</a>
           </li>
           <li *ngIf="auth.hasRole('DEPARTMENT')">
@@ -54,14 +57,15 @@ import { AuthService } from './core/services/auth.service';
 
       <div class="navbar-user">
         <ng-container *ngIf="auth.isLoggedIn(); else loginBlock">
-          <span class="username">👤 {{ auth.getUsername() }}</span>
+          <a class="username" routerLink="/profile">👤 {{ auth.getUsername() }}</a>
           <span class="role-badge" [class.admin]="auth.hasRole('ADMIN')" [class.department]="auth.hasRole('DEPARTMENT')">
             {{ auth.hasRole('ADMIN') ? 'Admin' : (auth.hasRole('DEPARTMENT') ? 'Department' : 'Citizen') }}
           </span>
           <button class="btn-logout" (click)="auth.logout()">Logout</button>
         </ng-container>
         <ng-template #loginBlock>
-          <a class="btn-login" routerLink="/login">Sign in</a>
+          <a class="btn-signup" routerLink="/signup">Create account</a>
+          <a class="btn-login" routerLink="/login">Login</a>
         </ng-template>
       </div>
     </nav>
@@ -102,7 +106,8 @@ import { AuthService } from './core/services/auth.service';
     }
 
     .navbar-user { display:flex; align-items:center; gap:.75rem; margin-left:auto; }
-    .username { color:#c0c7d4; font-size:.85rem; }
+    .username { color:#c0c7d4; font-size:.85rem; text-decoration:none; }
+    .username:hover { color:#e3f6ff; }
     .role-badge {
       font-size:.7rem; font-weight:600; padding:.2rem .6rem;
       border-radius:20px; background:#234125; color:#c5e1a5; text-transform:uppercase;
@@ -111,11 +116,18 @@ import { AuthService } from './core/services/auth.service';
     .role-badge.admin { background:#111c4e; color:#90caf9; }
     .role-badge.department { background:#3a2a10; color:#ffd180; }
 
-    .btn-login, .btn-logout {
+    .btn-login, .btn-signup, .btn-logout {
       display:inline-flex; align-items:center; justify-content:center; text-decoration:none;
       padding:.42rem 1.05rem; border:none; border-radius:999px;
       font-size:.85rem; cursor:pointer; transition:.18s ease-out;
     }
+    .btn-signup {
+      background:rgba(129,199,132,.14);
+      color:#c8e6c9;
+      border:1px solid rgba(129,199,132,.35);
+      font-weight:600;
+    }
+    .btn-signup:hover { background:rgba(129,199,132,.22); }
     .btn-login {
       background:#4fc3f7; color:#000; font-weight:600;
       box-shadow:0 0 0 1px rgba(0,0,0,.35);

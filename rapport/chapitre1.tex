@@ -1,109 +1,326 @@
 % ==============================================================================
 % FICHIER : chapitre1.tex
-% Description : Chapitre 1 : Étude préalable
+% Description : Chapitre 1 : Présentation du cadre du projet
 % Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
 % Organisme d'accueil : HRMAPS
 % ==============================================================================
 
-\chapter{Étude préalable}
+\chapter{Présentation du cadre du projet}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
-Ce premier chapitre est consacré à l'étude préalable de notre projet de fin d'études. Cette étape permet d'analyser le contexte général du projet, de comprendre le fonctionnement de notre organisme d'accueil, d'évaluer l'existant avec ses forces et ses limites, et de proposer une solution pertinente et adaptée. Il pose les fondations méthodologiques et fonctionnelles nécessaires pour le bon déroulement du projet.
+Ce premier chapitre pose le cadre général de notre projet de fin d'études. Nous y décrivons d'abord l'organisme d'accueil \textbf{HRMAPS}, puis la problématique liée à la gestion des incidents urbains et la réponse apportée par \textbf{SafeCity-Connect}. Enfin, nous exposons les méthodes de conduite du projet, l'environnement technique mobilisé et l'architecture retenue pour la plateforme.
 
 % ------------------------------------------------------------------------------
-% 1. PRÉSENTATION DE L'ORGANISME D'ACCUEIL
+% 1.1. PRÉSENTATION DE L'ORGANISME D'ACCUEIL
 % ------------------------------------------------------------------------------
 \section{Présentation de l'organisme d'accueil}
-
-\subsection{Présentation générale}
-L'organisme d'accueil choisi pour la réalisation de ce Projet de Fin d'Études est \textbf{HRMAPS}.
-
-Fondée initialement à Lyon (France) en 2014, HRMAPS s'est positionnée comme un éditeur de logiciels innovant, spécialisé dans le Talent Management (gestion des talents). En 2018, la société franchit un cap stratégique majeur en intégrant le \textbf{Groupe OCTIME}, l'un des leaders européens de la gestion des temps, de la planification et des solutions RH en mode SaaS (Cloud).
-
-Pour piloter ses activités, assurer le déploiement technique et accompagner la transformation digitale des entreprises en Tunisie et sur toute la région de l'Afrique du Nord, la solution s'appuie sur une structure d'intégration et d'expertise locale. Présente en Tunisie depuis 2008, cette structure apporte l'expertise technique et la proximité nécessaires pour adapter l'outil international aux spécificités juridiques, fiscales et organisationnelles du marché tunisien.
-
-Le tableau \ref{tab:identite_entreprise} résume les informations administratives, géographiques et juridiques majeures de notre organisme d'accueil :
-
-\begin{table}[H]
-    \centering
-    \caption{Fiche d'identité de HRMAPS Tunisie}
-    \label{tab:identite_entreprise}
-    \vspace{0.3cm}
-    \begin{tabularx}{\textwidth}{l X}
-        \toprule
-        \textbf{Libellé} & \textbf{Description} \\
-        \midrule
-        \textbf{Raison Sociale} & HRMAPS (Membre du Groupe OCTIME) \\
-        \textbf{Secteur d'Activité} & Technologies de l'Information (IT) \& Édition de Logiciels \\
-        \textbf{Domaine de Spécialisation} & Solutions de Gestion, SIRH et Management des Talents \\
-        \textbf{Modèle Économique} & Solutions Cloud / SaaS (Software as a Service) \\
-        \textbf{Adresse du Siège Local} & Immeuble Promed, Bloc B, 7ème étage, Centre Urbain Nord, Tunis 1082, Tunisie \\
-        \textbf{Téléphone} & +216 71 883 780 \\
-        \textbf{Sites Web Officiels} & \href{https://www.hrmaps.fr}{www.hrmaps.fr} / \href{https://www.octime.com}{www.octime.com} \\
-        \textbf{Principaux Clients en Tunisie} & Monoprix, Magasin Général, Géant, ASSAD, OLEA, Boudjebel, etc. \\
-        \bottomrule
-    \end{tabularx}
-\end{table}
-
-\subsection{Services}
-L'activité majeure de l'organisme d'accueil gravite autour du déploiement de son SIRH (Système d'Information des Ressources Humaines). La plateforme HRMAPS est une solution modulaire qui automatise et digitalise l'intégralité des processus RH à travers trois grands axes :
-
-\begin{itemize}
-    \item \textbf{Le Core RH \& l'Administration} : Centralisation du dossier numérique du collaborateur, portail Self-Service pour la gestion des demandes de congés, des absences et des notes de frais, circuits de validation automatisés (Workflows).
-    \item \textbf{La Gestion des Talents} : Digitalisation du recrutement (Suivi des candidats / ATS), processus d'intégration (Onboarding), grilles d'évaluations de performance, cartographie des compétences et plans de formation.
-    \item \textbf{Le Pilotage Décisionnel} : Génération automatique de tableaux de bord RH, édition du bilan social et interfaçage natif avec les solutions de paie tierces du marché.
-\end{itemize}
+Société tunisienne évoluant dans le secteur des technologies de l'information, HRMAPS conçoit et commercialise des solutions logicielles tournées vers la gestion des ressources humaines et le pilotage des compétences (SIRH). Son expertise réside dans la construction de plateformes modulaires et personnalisables, destinées à accompagner les organisations dans l'optimisation de leur capital humain et la digitalisation de leurs processus internes.
 
 \begin{figure}[H]
     \centering
-    \framebox[\textwidth]{\vbox to 5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure : Organigramme structurel de HRMAPS]}\hss}\vfill}}
-    \caption{Organigramme structurel de HRMAPS}
+    \includegraphics[width=0.4\textwidth]{hrmaps_logo.jpg}
+    \caption{Logo de l'entreprise HRMAPS}
+    \label{fig:logo_hrmaps}
+\end{figure}
+
+Le schéma suivant offre une vue synthétique de l'agencement hiérarchique et des différentes entités fonctionnelles de la société HRMAPS :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{organigramme_entreprise.png}
+    \caption{Organigramme de HRMAPS}
     \label{fig:organigramme_hrmaps}
 \end{figure}
 
 % ------------------------------------------------------------------------------
-% 2. PRÉSENTATION DU PROJET
+% 1.2. PRÉSENTATION DU PROJET
 % ------------------------------------------------------------------------------
 \section{Présentation du projet}
-Le projet \textbf{SafeCity-Connect} a pour objectif d'apporter une solution technologique innovante en connectant directement les citoyens aux services de maintenance de leur ville, en utilisant le meilleur des technologies du web, du cloud et de l'intelligence artificielle. Il s'agit d'une plateforme citoyenne de signalement géo-localisé des incidents urbains (nids-de-poule, fuites d'eau, pannes d'éclairage public). Le projet simplifie l'interaction citoyenne, automatise la classification des anomalies grâce à l'IA, et fournit aux administrateurs municipaux des outils de pilotage cartographique et statistique.
 
-% ------------------------------------------------------------------------------
-% 3. ÉTUDE DE L'EXISTANT
-% ------------------------------------------------------------------------------
-\section{Étude de l'existant}
+\subsection{Étude de l'existant}
+Dans la majorité des municipalités tunisiennes, la déclaration de désordres sur la voie publique et la prise en charge des réclamations des habitants fonctionnent encore selon des mécanismes conventionnels, largement dépourvus de support numérique. Concrètement, l'habitant qui repère une dégradation doit contacter la collectivité locale par téléphone, courrier électronique ou déplacement physique aux guichets pour consigner sa plainte sur un formulaire manuscrit.
+
+Après réception de cette requête, un employé communal procède à la retranscription manuelle des informations dans un registre papier ou une feuille de calcul. Les indications de localisation recueillies restent souvent approximatives et peu exploitables. Le dossier circule ensuite d'un bureau à l'autre pour être validé et programmé, en fonction des périmètres de compétence de chaque département.
+
+Tout au long du processus de résolution, le personnel municipal assure un suivi essentiellement informel. Une fois les travaux réalisés par les équipes d'intervention, un compte rendu papier rejoint les archives du secrétariat. Quant au citoyen ayant émis le signalement, il reste le plus souvent sans information sur l'état d'avancement des réparations, ce qui nourrit une démotivation croissante vis-à-vis de la participation à la vie locale.
 
 \subsection{Analyse de l'existant}
-Traditionnellement, la détection et la remontée des anomalies urbaines au sein des communes tunisiennes reposent sur des processus manuels ou semi-manuels :
+Les ateliers de cadrage et les échanges approfondis avec les collaborateurs de HRMAPS ont révélé un ensemble de faiblesses significatives dans le circuit actuel de traitement des incidents urbains. La lourdeur et la complexité de ce mécanisme pénalisent considérablement la capacité de réaction de l'administration communale.
+
+En premier lieu, le recours exclusif au traitement manuel des réclamations papier occasionne des retards substantiels et multiplie les risques d'erreurs lors de la saisie ou de disparition de documents, fragilisant ainsi la qualité du service rendu.
+
+Par ailleurs, l'absence de coordonnées géographiques fiables (GPS) oblige les techniciens à ratisser de vastes périmètres pour identifier le lieu exact du désordre, générant des coûts logistiques et des délais superflus. L'inexistence d'un mécanisme de détection des doublons conduit également à l'enregistrement de multiples fiches pour un même incident, ce qui surcharge les services. En outre, le déficit de retour d'information auprès des citoyens freine leur volonté de s'impliquer dans la gouvernance locale.
+
+\subsection{Solution proposée}
+Afin de pallier l'ensemble de ces insuffisances, notre travail porte sur la conception d'une plateforme intégrée réunissant un portail web et un client mobile, tous deux orientés vers la gestion centralisée des incidents de voirie. L'objectif principal est de numériser intégralement le parcours d'un signalement, depuis sa création jusqu'à sa clôture, au sein d'un référentiel unique.
+
+Grâce à cette solution, l'enregistrement des plaintes, la distribution des missions et la validation des interventions seront entièrement dématérialisés, réduisant ainsi les erreurs manuelles et accélérant les délais de prise en charge. Des capacités avancées, telles que le positionnement géographique sur une cartographie interactive ou la détection automatique d'anomalies par intelligence artificielle, renforceront l'efficacité opérationnelle.
+
+Les résidents auront la possibilité de soumettre leurs observations directement en ligne et de consulter l'avancement de leur traitement en temps réel. Ce degré d'automatisation libérera les agents municipaux des activités à faible valeur ajoutée, leur offrant la latitude nécessaire pour se concentrer sur le pilotage stratégique. C'est précisément dans cette perspective que notre organisme d'accueil a lancé la réalisation de cet outil novateur.
+
+% ------------------------------------------------------------------------------
+% 1.3. MÉTHODOLOGIES ADOPTÉES
+% ------------------------------------------------------------------------------
+\section{Méthodologies adoptées}
+Cette section expose le socle organisationnel et les cadres de travail retenus pour structurer le déroulement de notre projet et en garantir l'aboutissement.
+
+\subsection{Méthodologie de modélisation et de conception}
+Le recours à un formalisme de modélisation rigoureux constitue un préalable indispensable pour poser les bases d'un système cohérent et conforme aux attentes des parties prenantes.
+
+Notre choix s'est porté sur le langage UML (Unified Modeling Language), un standard international de représentation graphique qui offre une vision à la fois structurelle et comportementale d'un système logiciel.
+
+À travers la diversité de ses diagrammes, UML fournit un cadre méthodique pour l'étude des besoins, l'élaboration de l'architecture et la mise en œuvre d'applications logicielles, y compris les projets de grande envergure. Sa portée dépasse le domaine informatique, car il s'applique également à la formalisation de processus organisationnels.
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 3.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 1.3 : Modèle UML]}\hss}\vfill}}
+    \caption{Modèle UML}
+    \label{fig:modele_uml}
+\end{figure}
+
+\subsection{Méthodologie de gestion du projet}
+Dans le but de produire un livrable de qualité élevée, nous avons mis en place un processus structuré fondé sur l'itération et le perfectionnement continu. Ce modèle privilégie l'interaction permanente entre les développeurs et le commanditaire, de sorte que le produit s'affine au fil des retours recueillis.
+
+La vocation finale du projet étant la livraison d'un produit fini à un client, l'intégration de ce dernier dans chaque phase de construction s'impose comme une nécessité. C'est la raison pour laquelle nous avons privilégié une approche agile.
+
+Les démarches agiles se caractérisent par leur souplesse et leur aptitude à absorber les évolutions en cours de route. Elles préconisent le fractionnement du projet en blocs fonctionnels appelés itérations, chacun apportant un accroissement tangible de la solution.
+
+Parmi l'éventail des cadres agiles existants, nous avons adopté le framework Scrum, reconnu comme la référence dominante en matière de pilotage de projets logiciels. Scrum fait du client le pivot du cycle de réalisation et encourage la mise à disposition fréquente d'incréments exploitables.
+
+Le déroulement repose sur des itérations temporellement bornées, désignées sous le terme de sprints, au cours desquelles l'équipe se focalise sur un lot défini de fonctionnalités. À l'issue de chaque sprint, un incrément fonctionnel est soumis à la validation du client, autorisant ainsi un ajustement progressif du résultat global.
+
+Le diagramme ci-après synthétise le principe de fonctionnement du cadre Scrum et les différentes phases qui jalonnent le cycle de production agile :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{methode_scrum.png}
+    \caption{Méthode SCRUM}
+    \label{fig:methode_scrum}
+\end{figure}
+
+\subsubsection{Pourquoi Scrum ?}
+L'adoption de Scrum répond à un ensemble de critères déterminants en adéquation avec les exigences spécifiques de notre projet. Ce cadre agile instaure une dynamique collective propice à la coordination des efforts et à la structuration rigoureuse des activités.
+
+De surcroît, Scrum procure une capacité d'ajustement remarquable, permettant d'intégrer sans rupture les évolutions fonctionnelles demandées par le commanditaire, et ce grâce à des cycles de réalisation brefs et encadrés.
+
+Les bénéfices majeurs identifiés sont les suivants :
 \begin{itemize}
-    \item \textbf{Signalements physiques ou téléphoniques} : Le citoyen doit se déplacer au guichet de la municipalité ou tenter de joindre un standard téléphonique pour déclarer un problème (ex : route endommagée, lampe cassée).
-    \item \textbf{Tournées d'inspection planifiées} : Les agents de la voirie effectuent périodiquement des tournées d'inspection pour recenser visuellement les dégâts.
-    \item \textbf{Enregistrement papier} : Les requêtes reçues sont transcrites sur des registres physiques ou dans des fichiers Excel isolés, puis transmises manuellement aux équipes de réparation.
+    \item Capacité accrue à absorber les aléas et à réagir promptement.
+    \item Évolution permanente du produit au regard des retours utilisateurs collectés à chaque itération.
+    \item Lisibilité et maîtrise de l'ordonnancement des travaux techniques.
 \end{itemize}
 
-\subsection{Critique de l'existant}
-Ce fonctionnement traditionnel présente de nombreuses failles majeures :
+\subsubsection{L'équipe Scrum}
+Conformément aux principes fondateurs de l'agilité, le collectif Scrum fonctionne de manière autonome et transversale. Ses membres déterminent eux-mêmes l'approche la plus pertinente pour atteindre les objectifs fixés, réunissant l'ensemble des savoir-faire requis par le projet. Cette autonomie favorise l'inventivité, la réactivité et l'efficience du groupe.
+
+Au sein de notre projet, le collectif Scrum rassemble des intervenants aux responsabilités distinctes et complémentaires, garantissant un pilotage harmonieux du processus de réalisation.
+
+La composition de l'équipe Scrum est la suivante :
 \begin{itemize}
-    \item \textbf{Lenteur extrême} : Les délais entre la détection d'une anomalie et son enregistrement effectif par les services techniques peuvent prendre plusieurs semaines.
-    \item \textbf{Manque crucial de précision} : Les descriptions verbales ou écrites fournies par les citoyens sont souvent vagues et manquent de coordonnées précises, obligeant les équipes d'intervention à passer du temps à chercher l'incident sur place.
-    \item \textbf{Surcharge administrative et erreurs} : La saisie manuelle et le tri des plaintes prennent énormément de temps aux agents municipaux, entraînant parfois la perte ou l'oubli de dossiers.
-    \item \textbf{Absence de transparence et de retour d'information} : Les citoyens ne reçoivent aucun suivi de leurs plaintes, ce qui engendre un sentiment de frustration et un désengagement civique total.
+    \item \textbf{Un Scrum Master} : Il endosse la fonction de facilitateur et de guide méthodologique auprès de l'équipe de réalisation. Pour notre projet, ce rôle est assuré par notre encadrante de l'ISET Mme Nadia Hachani.
+    \item \textbf{Un Product Owner} : Il incarne le garant de la vision produit et constitue le lien privilégié entre le commanditaire et l'équipe opérationnelle. Il détient l'autorité exclusive sur l'administration du Product Backlog. Dans notre contexte, cette mission est confiée à notre encadrant en entreprise M. Rami Bouafif.
+    \item \textbf{L'équipe de développement} : Constituée de spécialistes techniques, elle produit à chaque sprint un incrément achevé et potentiellement déployable. La fabrication de l'incrément relève de leur seule responsabilité. Fonctionnant en auto-organisation et disposant de compétences variées, cette équipe est formée de Dhia Fersi et Mohamed Iyed Amiri.
+\end{itemize}
+
+Le schéma ci-dessous détaille la répartition des rôles au sein du collectif Scrum mobilisé pour ce projet :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{equipe_scrum.png}
+    \caption{L'équipe Scrum}
+    \label{fig:equipe_scrum}
+\end{figure}
+
+La cadence d'un projet Scrum s'articule autour de cérémonies formalisées, chacune possédant une durée et un objectif déterminés. Quatre types de rendez-vous ponctuent chaque cycle :
+\begin{itemize}
+    \item \textbf{Sprint Planning} : Séance inaugurale de chaque sprint, elle s'étend habituellement sur une période allant de deux semaines à un mois. Son objet est de définir le Sprint Goal et de sélectionner, par ordre de priorité, les User Stories extraites du Product Backlog.
+    \item \textbf{Sprint Review} : Cette cérémonie vise à examiner les livrables produits par l'équipe au terme d'un sprint. Elle offre l'occasion de mesurer l'écart entre les réalisations effectives et l'objectif initialement défini.
+    \item \textbf{Daily Meeting} : Point de synchronisation quotidien d'une quinzaine de minutes, il revêt une importance capitale pour évaluer la progression journalière du sprint. Ce bref échange permet à chaque membre d'aligner ses efforts et de planifier les actions des vingt-quatre heures à venir.
+    \item \textbf{Rétrospective du Sprint} : Tenue en fin de sprint, cette réunion reste circoncise au cercle Scrum. Elle offre au groupe l'opportunité d'analyser le cycle écoulé, de cerner les réussites et d'identifier les axes de perfectionnement.
 \end{itemize}
 
 % ------------------------------------------------------------------------------
-% 4. SOLUTION PROPOSÉE
+% 1.4. TECHNOLOGIES ET OUTILS DE TRAVAIL
 % ------------------------------------------------------------------------------
-\section{Solution proposée}
-Pour remédier aux lacunes de l'existant, nous proposons le développement de la plateforme \textbf{SafeCity-Connect}, un écosystème logiciel modulaire composé d'une \textbf{application web d'administration (Angular 18)} et d'une \textbf{application mobile multiplateforme (Flutter)} destinée aux citoyens et aux agents de terrain. Ses fonctionnalités phares incluent :
-\begin{enumerate}
-    \item \textbf{Application Mobile (Flutter)} : Permet aux citoyens de signaler un incident géo-localisé en prenant une photo, de suivre son statut de résolution (fixé ou non) directement sur la carte, de laisser des commentaires, et de donner leur avis après la résolution de l'anomalie (\textit{review fixes}). Elle permet aussi aux agents des départements techniques (dont les comptes sont créés par l'administrateur) de s'authentifier pour visualiser et clore leurs interventions sur site.
-    \item \textbf{Catégorisation IA Automatique} : Analyse instantanée de la photo de l'incident par un réseau YOLO pour suggérer automatiquement sa catégorie (nid-de-poule, fuite d'eau, déchets).
-    \item \textbf{Système d'Alertes et Notifications par Email} : Envoi automatique d'un e-mail de notification au service d'administration municipale dès qu'un citoyen soumet un nouveau signalement sur la carte de la ville.
-    \item \textbf{Portail Web d'Administration (Angular 18)} : Permet de gérer les catégories, de créer les comptes des agents techniques, d'affecter les incidents aux différents départements, de suivre la carte thermique (\textit{Heatmap}) PostGIS et de consulter des indicateurs analytiques.
-    \item \textbf{Flux de Clôture et Modération de la Fixation} : L'agent de terrain effectue les travaux et soumet une \textbf{photo preuve de résolution}. L'administrateur étudie cette preuve et peut \textbf{valider} ou \textbf{rejeter} l'intervention en saisissant obligatoirement un \textbf{motif de refus} enregistré dans la timeline de l'incident.
-    \item \textbf{Reporting Décisionnel et Exports PDF} : Permet à l'administrateur d'exporter le récapitulatif hebdomadaire des incidents au format Excel/CSV et de générer un rapport PDF individuel complet et officiel pour chaque incident (comprenant les photos avant/après, la timeline interne, les commentaires et les acteurs impliqués).
-\end{enumerate}
+\section{Technologies et outils de travail}
 
+\subsection{Environnement matériel}
+Le poste de travail de chaque membre de l'équipe répond aux exigences minimales du développement full-stack et mobile. Les configurations utilisées sont résumées ci-dessous :
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 3cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 1.6 : Caractéristiques du PC de Dhia]}\hss}\vfill}}
+    \caption{Caractéristiques du PC de Dhia}
+    \label{fig:pc_dhia}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 3cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 1.7 : Caractéristiques du PC de Mohamed Iyed]}\hss}\vfill}}
+    \caption{Caractéristiques du PC de Mohamed Iyed}
+    \label{fig:pc_iyed}
+\end{figure}
+
+\subsection{Environnement logiciel}
+La réalisation de \textbf{SafeCity-Connect} a mobilisé un ensemble d'outils couvrant la modélisation UML, le développement full-stack, la gestion de versions et l'administration des bases de données. Le tableau ci-après synthétise les principaux logiciels retenus par l'équipe.
+
+% ------------------------------------------------------------------------------
+% 1.5. OUTILS ET TECHNOLOGIES UTILISÉS
+% ------------------------------------------------------------------------------
+% Logos : placer les fichiers PNG dans le dossier rapport/logos/ (voir noms ci-dessous).
+% Si le fichier est absent, un encadré de remplacement s'affiche à la compilation.
+\newcommand{\logotech}[2]{%
+  \IfFileExists{#1}{%
+    \includegraphics[width=\linewidth,keepaspectratio,height=1.35cm]{#1}%
+  }{%
+    \fbox{\parbox[c][1.35cm][c]{\linewidth}{\centering\scriptsize\textbf{#2}}}%
+  }%
+}
+
+\section{Outils et Technologies utilisés}
+
+Cette section regroupe la stack technique en trois blocs visuels (figures en grille) complétés par des tableaux récapitulatifs. Cette présentation évite de multiplier les figures dans la liste des illustrations tout en restant lisible pour le jury.
+
+\subsection{Outils de développement}
+La figure~\ref{fig:outils_dev} regroupe les principaux outils de conception, de développement et d'exploitation. Le tableau~\ref{tab:outils_dev} en précise le rôle dans \textbf{SafeCity-Connect}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{outils_developpement.png}
+    \caption{Outils de développement et d'administration utilisés}
+    \label{fig:outils_dev}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \caption{Synthèse des outils de développement}
+    \label{tab:outils_dev}
+    \small
+    \renewcommand{\arraystretch}{1.25}
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Outil} & \textbf{Rôle dans le projet} \\ \hline
+        Visual Studio Code & Édition du front-end Angular, scripts et configuration Git. \\ \hline
+        Draw.io & Modélisation UML (cas d'utilisation, séquences, classes). \\ \hline
+        IntelliJ IDEA & Développement de l'API Spring Boot monolithique et débogage Java. \\ \hline
+        GitHub & Versionnement Git, branches par sprint et collaboration en binôme. \\ \hline
+        Android Studio & Émulateurs Android et tests du client mobile Flutter. \\ \hline
+        Keycloak & Authentification SSO, rôles et jetons JWT (OAuth2/OIDC). \\ \hline
+        PostgreSQL / pgAdmin & Administration de la base \texttt{safecity\_db} et vérification des tables métier. \\ \hline
+    \end{tabularx}
+\end{table}
+
+\subsection{Langages de programmation}
+La figure~\ref{fig:langages} illustre les langages mobilisés ; le tableau~\ref{tab:langages} indique leur affectation par couche applicative.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{les_languages.png}
+    \caption{Langages de programmation de la stack SafeCity-Connect}
+    \label{fig:langages}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \caption{Synthèse des langages utilisés}
+    \label{tab:langages}
+    \small
+    \renewcommand{\arraystretch}{1.25}
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+        \hline
+        \textbf{Langage} & \textbf{Couche} & \textbf{Usage principal} \\ \hline
+        Java 17 & Backend & API REST Spring Boot, règles métier, persistance JPA. \\ \hline
+        TypeScript & Front web & Portail Angular (composants, services, routing). \\ \hline
+        Dart & Mobile & Application Flutter (espaces citoyen et administration mobile). \\ \hline
+        SQL & Données & Requêtes PostgreSQL/PostGIS et agrégations géographiques (latitude/longitude). \\ \hline
+        Python & IA & Service FastAPI externe pour l'inférence YOLOv8. \\ \hline
+    \end{tabularx}
+\end{table}
+
+\subsection{Frameworks et système de gestion de base de données}
+Les frameworks et le SGBD sont présentés sur une même figure (figure~\ref{fig:frameworks_bdd}), complétée par le tableau~\ref{tab:frameworks_bdd}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{les_frameworks.png}
+    \caption{Frameworks et base de données}
+    \label{fig:frameworks_bdd}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \caption{Synthèse des frameworks et du SGBD}
+    \label{tab:frameworks_bdd}
+    \small
+    \renewcommand{\arraystretch}{1.25}
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Technologie} & \textbf{Rôle dans le projet} \\ \hline
+        Angular 18 & Portail municipal : cartographie Leaflet, dashboards, gestion des missions. \\ \hline
+        Flutter & Application mobile citoyenne et console admin mobile (signalement GPS, suivi). \\ \hline
+        Spring Boot 3.2 & Backend monolithique REST, sécurité OAuth2, persistance JPA. \\ \hline
+        PostgreSQL / PostGIS & Base relationnelle \texttt{safecity\_db} ; extension PostGIS activée pour les traitements géographiques. \\ \hline
+    \end{tabularx}
+\end{table}
+
+\section{Architecture de l'application}
+Afin de garantir une séparation rigoureuse des concepts et de simplifier les futures évolutions de la plateforme \textbf{SafeCity-Connect}, nous avons mis en œuvre un modèle architectural structuré en trois tiers. Ce choix de conception permet de compartimenter l'interaction utilisateur, la logique métier et le stockage persistant au sein de couches indépendantes, optimisant ainsi la robustesse générale, la lisibilité du code et la facilité de maintenance du système.
+
+Ce découpage fonctionnel s'articule autour de trois niveaux fondamentaux détaillés ci-après : la couche de présentation, la couche applicative et la couche d'accès aux données, complétées par un module externe basé sur l'intelligence artificielle pour l'évaluation automatique d'images.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{architecture_systeme.png}
+    \caption{Architecture globale de l'application SafeCity-Connect}
+    \label{fig:architecture_globale}
+\end{figure}
+
+\subsection{Couche de présentation}
+Cette première composante sert de passerelle directe avec les utilisateurs en hébergeant les interfaces graphiques nécessaires au pilotage et à l'exploitation de la plateforme. Elle prend en charge la réception des actions utilisateur, la restitution esthétique des données et la navigation au sein des parcours fonctionnels.
+
+Dans notre projet, cette dimension visuelle s'articule autour de deux applications clientes complémentaires :
+\begin{itemize}
+    \item \textbf{Un portail web dynamique}, développé à l'aide du framework \textbf{Angular}. Cette technologie moderne permet d'organiser les interfaces à travers des modules et des composants réutilisables, offrant une réactivité élevée pour l'administration et le suivi des incidents.
+    \item \textbf{Une application mobile native}, conçue sous l'écosystème \textbf{Flutter}. Ce framework multiplateforme garantit une expérience utilisateur fluide, performante et homogène sur les systèmes d'exploitation Android et iOS, idéale pour les signalements de terrain géolocalisés.
+\end{itemize}
+
+Ces clients communiquent de manière transparente avec notre serveur Spring Boot sous-jacent en émettant des requêtes HTTP asynchrones vers les points de terminaison de son API REST.
+
+\subsection{Couche applicative}
+Véritable centre névralgique du système, la couche applicative orchestre l'ensemble de la logique métier et fait appliquer les règles de gestion du projet. Nous avons implémenté cette logique sous la forme d'un service backend unifié reposant sur \textbf{Spring Boot}, structuré avec rigueur selon les patrons de conception contrôleurs-services-dépôts (MVC/Service).
+
+Ce serveur central prend en charge les missions majeures suivantes :
+\begin{itemize}
+    \item La réception, l'analyse et le routage des flux de requêtes émis par les plateformes web et mobiles.
+    \item L'exécution logique du cycle de vie des incidents (de leur création à leur résolution effective).
+    \item La vérification systématique de l'intégrité et de la validité des informations reçues.
+    \item La sécurisation avancée de l'ensemble des transactions applicatives en validant les jetons d'accès JWT générés par l'annuaire d'identité sécurisé \textbf{Keycloak}.
+    \item La liaison et la synchronisation avec notre brique externe d'analyse automatique.
+\end{itemize}
+
+L'accès aux diverses ressources exposées par le backend Spring Boot s'effectue après validation des privilèges associés à chaque profil utilisateur (\texttt{CITIZEN}, \texttt{ADMIN} ou \texttt{DEPARTMENT}). De plus, afin d'accélérer l'identification des anomalies routières, un microservice indépendant propulsé par \textbf{FastAPI} et le modèle de détection d'objets \textbf{YOLOv8} coopère activement avec le serveur principal en inspectant à la volée les fichiers photographiques transmis par les citoyens.
+
+\subsection{Couche d'accès aux données}
+Ce dernier palier technique est entièrement voué à la modélisation physique, à la persistance à long terme et à la sécurisation des structures de données manipulées par SafeCity-Connect.
+
+La persistance des informations repose sur un serveur de bases de données relationnelles \textbf{PostgreSQL}. Ce moteur robuste est enrichi de la cartouche spatiale \textbf{PostGIS}, ce qui nous permet de stocker, de requêter et de cartographier de manière native et optimale les géométries géographiques (coordonnées GPS des incidents).
+
+La couche applicative Spring Boot interagit avec cet entrepôt de données par l'intermédiaire du framework de persistance \textbf{Spring Data JPA}, facilitant grandement :
+\begin{itemize}
+    \item L'abstraction du stockage en mappant de manière transparente les entités orientées objet vers les tables de la base.
+    \item La réalisation simplifiée et sécurisée des opérations fondamentales d'écriture et de lecture (opérations CRUD).
+    \item La gestion fluide des liaisons et intégrités référentielles reliant les entités métier.
+    \item L'optimisation des requêtes géospatiales de proximité.
+\end{itemize}
+
+Afin d'éviter toute dégradation des performances globales du SGBD PostgreSQL, les pièces jointes volumineuses (telles que les photographies de voirie) ne sont pas stockées sous forme binaire dans la base, mais écrites localement sur le disque du serveur, seule la référence textuelle de leur chemin d'accès étant persistée en base. Cette architecture en couches bien délimitées garantit la robustesse opérationnelle de la solution.
+
+% ------------------------------------------------------------------------------
+% CONCLUSION
+% ------------------------------------------------------------------------------
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
-L'étude préalable réalisée dans ce chapitre nous a permis de justifier pleinement la nécessité de développer la plateforme \textit{SafeCity-Connect}. En analysant l'existant, nous avons mis en lumière les blocages administratifs et opérationnels actuels. La solution proposée offrira une réactivité accrue et modernisera la communication municipale. Le chapitre suivant détaillera la planification du projet ainsi que son architecture globale.
+Ce chapitre a permis de situer \textbf{SafeCity-Connect} dans son contexte professionnel (HRMAPS), d'analyser les limites des processus manuels de gestion des incidents urbains et de justifier la solution numérique proposée. Nous avons également précisé l'approche agile Scrum, la modélisation UML, la stack technologique retenue et l'architecture trois tiers (monolithe Spring Boot + service IA FastAPI) adoptée.
+
+Le chapitre suivant formalise les besoins fonctionnels et non fonctionnels, identifie les acteurs et présente le Product Backlog ainsi que la planification des sprints.

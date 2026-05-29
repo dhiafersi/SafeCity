@@ -1,100 +1,915 @@
 % ==============================================================================
 % FICHIER : chapitre3.tex
-% Description : Chapitre 3 (Sprint 0) : Architecture logicielle et Framework de développement
+% Description : Chapitre 3 : Release 1 -- Gestion d'accès, profils et sécurité
 % Auteurs : Dhia Fersi & Mohamed Iyed Amiri (ISET Bizerte)
 % Organisme d'accueil : HRMAPS
 % ==============================================================================
 
-\chapter[Sprint 0 : Architecture et Outils]{Sprint 0 : Architecture logicielle et Framework de développement}
+\chapter{Release 1 : Gestion d'accès, profils et sécurité}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
-Le Sprint 0 constitue le point de départ technique de notre projet de développement. Il a pour but de définir les choix d'architecture logicielle, de préparer l'infrastructure réseau et sécurité, d'harmoniser les outils de développement et de configurer l'ensemble des environnements matériels et logiciels. Ce chapitre présente le Backlog du Sprint 0, détaille la vue architecturale de \textit{SafeCity-Connect} (comprenant l'architecture de sécurité OAuth2/OIDC) et dresse l'état des outils et frameworks retenus pour la réalisation du projet.
+Ce chapitre est dédié aux différents sprints qui constituent la première release du projet \textbf{SafeCity-Connect}. Nous y détaillons l'ensemble de la modélisation et de la conception logicielle, notamment à travers les diagrammes de cas d'utilisation, de classes, ainsi que les diagrammes de séquences (système et conception).
+
+En outre, nous illustrerons les choix ergonomiques et les interfaces graphiques développées pour chaque sprint à l'aide de captures d'écrans et de maquettes démonstratives. Ces éléments apportent un éclairage sur les briques d'authentification unique (SSO), les fonctions de contrôle des profils et le module de signalement cartographique interactif mis en œuvre durant cette première phase.
 
 % ------------------------------------------------------------------------------
-% 1. BACKLOG SPRINT 0
+% 3.1. ORGANISATION DES SPRINTS
 % ------------------------------------------------------------------------------
-\section{Backlog Sprint 0}
-Le Sprint 0 vise à poser les jalons technologiques indispensables avant d'entamer les sprints de développement fonctionnels. Ses objectifs opérationnels se résument à :
-\begin{itemize}
-    \item \textbf{Configurer le dépôt Git} et le workflow de branchement de l'équipe.
-    \item \textbf{Orchestrer l'infrastructure locale} via Docker et Docker Compose (base de données, Keycloak, microservice IA).
-    \item \textbf{Initialiser les projets squelettes} (Backend Spring Boot, Web Admin Angular, et App Mobile Flutter).
-    \item \textbf{Valider l'interfaçage initial} entre tous ces systèmes.
-\end{itemize}
+\section{Organisation des sprints}
+La première release de notre projet réunit les trois sprints initiaux du cycle de vie SCRUM. Elle englobe la mise en place du socle technique, de l'authentification unifiée Keycloak et de la brique de signalement mobile géolocalisé. Chaque sprint correspond à un ensemble de tâches programmées sur une période de deux semaines.
 
-% ------------------------------------------------------------------------------
-% 2. VUE ARCHITECTURALE DU SYSTÈME
-% ------------------------------------------------------------------------------
-\section{Vue architecturale du système}
-
-\subsection{Architecture globale du système}
-Pour garantir la flexibilité, le découplage des responsabilités et la robustesse de notre plateforme, nous avons conçu une architecture client-serveur multiniveaux articulée autour de 5 couches interdépendantes :
-\begin{enumerate}
-    \item \textbf{Le Client Web (Angular 18)} : Fournit la console d'administration municipale pour le suivi de la Heatmap, la modération, la gestion des rôles Keycloak et les exports analytiques.
-    \item \textbf{Le Client Mobile (Flutter)} : L'application mobile multiplateforme destinée aux citoyens (signalement avec photo, commentaires, statut de résolution, notation des correctifs) et aux agents techniques (visualisation des missions et transmission de la photo preuve de fixation).
-    \item \textbf{Le Serveur de Sécurité (Keycloak)} : Centralise l'authentification unifiée (SSO) et le contrôle d'accès basé sur les rôles.
-    \item \textbf{L'API Gateway / Serveur Applicatif (Spring Boot 3.2)} : Gère les contrôles métiers, les services d'alertes e-mail et coordonne les flux de données.
-    \item \textbf{La Base de Données (PostgreSQL / PostGIS)} : Assure le stockage relationnel et l'indexation cartographique spatiale native.
-    \item \textbf{Le Microservice d'IA (Python YOLO)} : Traite l'analyse visuelle des photos chargées.
-\end{enumerate}
-
-La figure \ref{fig:schema_architecture} représente graphiquement cette organisation système.
+Le schéma ci-dessous détaille le découpage et le calendrier des sprints de cette première release :
 
 \begin{figure}[H]
     \centering
-    \framebox[\textwidth]{\vbox to 6cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure : Schéma d'Architecture Système Globale]}\hss}\vfill}}
-    \caption{Architecture globale de SafeCity-Connect}
-    \label{fig:schema_architecture}
+    \includegraphics[width=\linewidth]{release_1.png}
+    \caption{Release 1}
+    \label{fig:release1_planning}
 \end{figure}
 
-\subsection{Architecture logicielle du système}
-L'architecture de sécurité repose sur les standards de l'industrie pour les applications web monopages (SPA) :
-\begin{itemize}
-    \item \textbf{OAuth2 et OpenID Connect (OIDC)} : protocoles de référence pour déléguer l'authentification et l'autorisation de manière sécurisée.
-    \item \textbf{Flux PKCE (Proof Key for Code Exchange)} : Utilisé lors de l'authentification côté frontend Angular pour interagir de manière ultra-sécurisée avec Keycloak sans requérir le stockage d'un secret client dans le code du navigateur.
-    \item \textbf{Validation JWT} : Le frontend transmet le jeton d'accès JWT dans l'en-tête HTTP \texttt{Authorization: Bearer <JWT>} à chaque appel API. Le backend Spring Boot valide ce jeton cryptographiquement à l'aide des clés publiques de Keycloak, garantissant l'intégrité et la confidentialité des requêtes.
-\end{itemize}
-
 % ------------------------------------------------------------------------------
-% 3. PRÉSENTATION DES OUTILS DE DÉVELOPPEMENT
+% 3.2. SPRINT 1: DOCUMENTATION ET CONFIGURATION
 % ------------------------------------------------------------------------------
-\section{Présentation des outils de développement}
+\section{Sprint 1: Documentation et configuration}
+Le premier sprint Scrum couvre deux semaines calendaires. L'équipe y consolide le cadrage fonctionnel, installe l'environnement de développement et prépare les fondations techniques (base spatiale, IAM, étude YOLOv8) avant les livraisons fonctionnelles.
 
-\subsection{Environnement Matériel}
-Le développement et les tests locaux ont été menés sur des postes de travail équipés de processeurs multicœurs (Intel Core i7, 16 Go de RAM, disques SSD rapides) indispensables pour exécuter simultanément les multiples conteneurs Docker (Keycloak, PostgreSQL, Spring Boot, Angular, YOLO AI).
+\subsection{Sprint Goal}
+L'objectif de ce premier sprint est d'approfondir nos connaissances sur le domaine d'étude, d'étudier le fonctionnement du modèle de détection YOLOv8, de mettre en place nos outils de modélisation UML et de développement, et de configurer la base de données \textbf{PostgreSQL/PostGIS} ainsi que la solution de gestion des accès Keycloak.
 
-\subsection{Environnement Logiciel}
-L'environnement logiciel comprend les outils de productivité et de conteneurisation suivants :
-\begin{itemize}
-    \item \textbf{Système d'Exploitation} : Windows 11 Professionnel.
-    \item \textbf{IDEs} : \textbf{IntelliJ IDEA Ultimate} (développement Java/Spring Boot) et \textbf{Visual Studio Code / Android Studio} (développement TypeScript/Angular et mobile Flutter).
-    \item \textbf{Orchestration Docker \& Docker Compose} : Essentiel pour packager et déployer instantanément tous nos services dans des conteneurs isolés et reproductibles.
-    \item \textbf{Gestion des Versions} : \textbf{Git} combiné à l'hébergeur \textbf{GitHub}.
-\end{itemize}
-
-\subsection{Langage et Framework de développement}
-Le tableau \ref{tab:sprint0_technologies} résume les frameworks et technologies retenus :
+\subsection{Backlog du sprint 1}
+Le tableau suivant présente la composition détaillée du backlog du sprint 1 :
 
 \begin{table}[H]
     \centering
-    \caption{Frameworks et Technologies choisis}
-    \label{tab:sprint0_technologies}
-    \vspace{0.3cm}
-    \begin{tabularx}{\textwidth}{l X}
-        \toprule
-        \textbf{Framework / Langage} & \textbf{Justification du Choix} \\
-        \midrule
-        \textbf{Java 21} & Version LTS offrant des performances accrues (Virtual Threads, Pattern Matching). \\
-        \textbf{Spring Boot 3.2} & Framework backend de référence en Java, gérant la sécurité (OAuth2) et Spring Data JPA. \\
-        \textbf{Angular 18} & Framework web robuste pour le dashboard d'administration réactif de la municipalité. \\
-        \textbf{Flutter 3.x / Dart} & Framework mobile de Google pour compiler nativement l'application citoyen et agent de terrain sur Android et iOS. \\
-        \textbf{PostgreSQL / PostGIS} & SGBD relationnel robuste doté de la meilleure extension spatiale pour stocker la géo-localisation. \\
-        \textbf{Python / YOLO} & Écosystème leader pour la détection et classification automatique d'images. \\
-        \bottomrule
+    \caption{Backlog du Sprint 1}
+    \label{tab:backlog_sprint1}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|c|}
+        \hline
+        \textbf{User Stories} & \textbf{Tâches techniques de configuration} & \textbf{Durée} \\ \hline
+        \textbf{US-01} & Analyse du domaine, élaboration du backlog et des récits utilisateurs. & 2 jours \\ \hline
+        \textbf{US-02} & Spécification des architectures et technologies (Spring Boot/Angular/Flutter). & 1 jour \\ \hline
+        \textbf{US-03} & Installation et configuration des IDEs (IntelliJ IDEA, VS Code, Android Studio). & 1 jour \\ \hline
+        \textbf{US-04} & Configuration de PostgreSQL et activation de l'extension PostGIS pour les données géographiques. & 1 jour \\ \hline
+        \textbf{US-05} & Configuration de Keycloak sous conteneur Docker et création des realms. & 1 jour \\ \hline
+        \textbf{US-06} & Formation sur LaTeX et écriture de la structure initiale du rapport. & 1 jour \\ \hline
+        \textbf{US-07} & Étude de YOLOv8 d'Ultralytics et des bibliothèques de traitement d'images. & 3 jours \\ \hline
     \end{tabularx}
 \end{table}
 
+% ------------------------------------------------------------------------------
+% 3.3. SPRINT 2 : GESTION D'ACCÈS ET DE PROFIL
+% ------------------------------------------------------------------------------
+\section{Sprint 2 : Gestion d'accès et de profil}
+
+\subsection{Sprint Goal}
+Ce sprint vise à déployer les fonctionnalités de sécurité nécessaires au contrôle des accès et à la gestion des profils utilisateurs. Il s'agit d'intégrer l'authentification unifiée SSO via Keycloak, de concevoir le formulaire d'inscription mobile pour les citoyens, et de fournir à l'administrateur municipal une interface de gestion des comptes, garantissant un environnement sécurisé pour le système.
+
+\subsection{Sprint Backlog}
+Le tableau suivant résume le backlog associé à ce deuxième sprint :
+
+\begin{table}[H]
+    \centering
+    \caption{Sprint Backlog du Sprint 2}
+    \label{tab:backlog_sprint2}
+    \vspace{0.2cm}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{|l|X|c|}
+        \hline
+        \textbf{User Stories} & \textbf{Tâches de développement et d'intégration} & \textbf{Durée} \\ \hline
+        \textbf{US-08 : Créer un compte} & 
+        - Développer le backend Spring Boot pour stocker les profils citoyens.\\
+        & - Développer l'interface mobile Flutter du formulaire d'inscription citoyenne.\\
+        & - Configurer le workflow d'enregistrement Keycloak public.\\
+        & - Réaliser les tests de validation de l'inscription. & 3j \\ \hline
+        \textbf{US-09 : Se connecter} &
+        - Intégrer la dépendance OAuth2 Resource Server dans Spring Boot.\\
+        & - Développer le flux de connexion sécurisé avec Keycloak.\\
+        & - Développer l'interface d'authentification unique (SSO) sur Angular et Flutter.\\
+        & - Tester l'extraction et la validation des rôles utilisateurs depuis le Token JWT. & 3j \\ \hline
+        \textbf{US-10 : Créer des comptes} &
+        - Développer le backend d'administration pour la création de comptes techniques.\\
+        & - Concevoir les interfaces Angular de gestion des comptes d'agents.\\
+        & - Tester la création d'un agent de voirie par l'administrateur. & 3j \\ \hline
+        \textbf{US-11 : Gérer les statuts} &
+        - Ajouter les fonctions d'activation/désactivation de comptes dans Keycloak.\\
+        & - Créer les interfaces web Angular de gestion des blocages de profils. & 2j \\ \hline
+        \textbf{US-12 : Modifier profil} &
+        - Développer l'API REST de mise à jour des coordonnées personnelles.\\
+        & - Créer l'interface de modification de profil sur l'application Flutter. & 2j \\ \hline
+        \textbf{US-13 : Consulter profil} &
+        - Développer le service de récupération des données et des points d'impact.\\
+        & - Développer l'interface mobile de consultation du profil citoyen. & 2j \\ \hline
+    \end{tabularx}
+\end{table}
+
+\subsection{Implémentation du sprint 2}
+
+\paragraph{Expression des besoins}
+Cette section détaille les besoins liés au deuxième sprint. Nous présentons le diagramme des cas d'utilisation, les descriptions textuelles détaillées des cas d'utilisation et les diagrammes de séquence système correspondants.
+
+Le diagramme des cas d'utilisation du sprint 2 est représenté ci-dessous :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{uc_sprint2.png}
+    \caption{Diagramme de cas d'utilisation du sprint 2}
+    \label{fig:uc_sprint2}
+\end{figure}
+
+Ce diagramme structure les relations entre les utilisateurs (Citoyen, Administrateur / Service technique (DEPARTMENT), Administrateur) et la plateforme pour la gestion des accès et de la sécurité. Les descriptions détaillées de ces cas d'utilisation sont fournies ci-après.
+
+La table suivante décrit le cas d'utilisation \textbf{\og Authentification \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Authentification »}
+    \label{tab:txt_auth}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Authentification \\ \hline
+        \textbf{Acteur} & Citoyen, Administrateur / Service technique (DEPARTMENT), Administrateur \\ \hline
+        \textbf{Pré-condition} & L'usager dispose d'un compte enregistré au sein du serveur Keycloak. \\ \hline
+        \textbf{Post-condition} & L'utilisateur accède au système muni d'un token JWT valide contenant ses autorisations. \\ \hline
+        \textbf{Scénario nominal} & 
+        1. L'usager se rend sur le formulaire de connexion.\\
+        & 2. Il renseigne ses identifiants d'accès (nom d'utilisateur ou e-mail, et mot de passe).\\
+        & 3. Le serveur Keycloak procède à la validation des informations saisies.\\
+        & 4. Keycloak génère et transmet un jeton JWT dûment signé.\\
+        & 5. L'application oriente l'usager vers l'interface dédiée à son profil. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. Saisie d'identifiants incorrects.\\
+        & 3'.1 Le serveur Keycloak affiche un message d'erreur d'authentification.\\
+        & 3'.2 L'usager tente à nouveau de renseigner ses coordonnées. \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Indisponibilité du serveur Keycloak.\\
+        & 1'.1 L'application affiche un message signalant une défaillance réseau. \\ \hline
+    \end{tabularx}
+\end{table}
+
+La fiche ci-après décrit le cas d'utilisation \textbf{\og S'inscrire \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « S'inscrire »}
+    \label{tab:txt_inscription}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & S'inscrire (Citoyen) \\ \hline
+        \textbf{Acteur} & Citoyen \\ \hline
+        \textbf{Pré-condition} & L'usager ne possède pas encore de compte sur le support mobile. \\ \hline
+        \textbf{Post-condition} & Le profil du citoyen est créé dans Keycloak et enregistré dans la base de données locale. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le citoyen se rend sur la page d'inscription de l'application mobile.\\
+        & 2. Il renseigne les champs requis (nom, prénom, adresse e-mail, identifiant et mot de passe).\\
+        & 3. L'application contrôle le format et la complétude des données (ex: format e-mail).\\
+        & 4. Keycloak procède à l'enregistrement et affecte le rôle par défaut \texttt{ROLE\_CITIZEN}.\\
+        & 5. Le backend initialise le compte citoyen et crée sa fiche de suivi d'impact.\\
+        & 6. Un message de réussite s'affiche et redirige l'usager vers l'écran de connexion. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. L'adresse de messagerie fournie est déjà rattachée à un compte.\\
+        & 3'.1 Un message d'erreur explicite s'affiche à l'écran.\\
+        & 3'.2 Le citoyen saisit une autre adresse e-mail. \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Échec de connexion avec le serveur Keycloak ou la base de données.\\
+        & 1'.1 Le système interrompt l'inscription et renvoie un message d'erreur technique. \\ \hline
+    \end{tabularx}
+\end{table}
+
+La fiche ci-après décrit le cas d'utilisation \textbf{\og Consulter Profil \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Consulter Profil »}
+    \label{tab:txt_consulter_prof}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Consulter Profil \\ \hline
+        \textbf{Acteur} & Citoyen, Administrateur / Service technique (DEPARTMENT), Administrateur \\ \hline
+        \textbf{Pré-condition} & L'utilisateur est authentifié sur la plateforme. \\ \hline
+        \textbf{Post-condition} & L'écran affiche les données personnelles et le total des points d'impact. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'usager se rend dans l'espace dédié à son profil.\\
+        & 2. Le système extrait l'identifiant unique de l'utilisateur du jeton JWT.\\
+        & 3. Le backend recherche les données de profil et le score associé en base.\\
+        & 4. Les informations correspondantes sont affichées sur l'interface. \\ \hline
+        \textbf{Scénario alternatif} & Néant \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Le token d'authentification a expiré.\\
+        & 1'.1 Le système déconnecte l'usager et le renvoie vers la page de connexion. \\ \hline
+    \end{tabularx}
+\end{table}
+
+La fiche ci-après décrit le cas d'utilisation \textbf{\og Modifier Profil \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Modifier Profil »}
+    \label{tab:txt_modif_prof}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Modifier Profil \\ \hline
+        \textbf{Acteur} & Citoyen, Administrateur / Service technique (DEPARTMENT), Administrateur \\ \hline
+        \textbf{Pré-condition} & L'usager est connecté au système. \\ \hline
+        \textbf{Post-condition} & Les modifications sont enregistrées dans Keycloak et en base. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'utilisateur clique sur l'option de modification de son compte.\\
+        & 2. Le formulaire affiche les informations actuelles (Nom, Prénom, etc.).\\
+        & 3. L'usager modifie ses données et valide le formulaire.\\
+        & 4. Le backend relaie ces changements auprès de l'API de Keycloak.\\
+        & 5. Les données mises à jour sont enregistrées et un message de succès s'affiche. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. Saisie de valeurs incorrectes ou mal formatées.\\
+        & 3'.1 Le système met en évidence les champs erronés. \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Problème technique d'accès aux services de données ou à Keycloak.\\
+        & 1'.1 Le système indique un échec de la mise à jour. \\ \hline
+    \end{tabularx}
+\end{table}
+
+La fiche ci-après décrit le cas d'utilisation \textbf{\og Consulter les Comptes \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Consulter les Comptes »}
+    \label{tab:txt_cons_comptes}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Consulter les Comptes \\ \hline
+        \textbf{Acteur} & Administrateur Municipal \\ \hline
+        \textbf{Pré-condition} & L'administrateur est authentifié et détient le rôle requis. \\ \hline
+        \textbf{Post-condition} & La liste des utilisateurs inscrits est présentée sur l'écran. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'administrateur se rend dans l'espace « Gestion des Utilisateurs » de la console Angular.\\
+        & 2. Le client Angular transmet la requête au service backend.\\
+        & 3. Le serveur backend interroge Keycloak pour extraire les comptes du Realm.\\
+        & 4. La console Angular affiche la liste complète sous forme de tableau. \\ \hline
+        \textbf{Scénario alternatif} & Néant \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Le serveur Keycloak ne répond pas.\\
+        & 1'.1 La console web indique un échec de chargement des comptes. \\ \hline
+    \end{tabularx}
+\end{table}
+
+La fiche ci-après décrit le cas d'utilisation \textbf{\og Créer un Compte \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Créer un Compte »}
+    \label{tab:txt_creer_compte}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Créer un Compte Administrateur / Service technique (DEPARTMENT) \\ \hline
+        \textbf{Acteur} & Administrateur Municipal \\ \hline
+        \textbf{Pré-condition} & L'administrateur s'est connecté à son espace. \\ \hline
+        \textbf{Post-condition} & Un compte Keycloak avec le rôle DEPARTMENT est créé. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'administrateur ouvre le formulaire d'ajout d'un nouvel agent.\\
+        & 2. Il saisit le nom de l'agent, son e-mail, son service technique (voirie, eau, éclairage) et son mot de passe par défaut.\\
+        & 3. Le système Keycloak valide les informations et procède à la création.\\
+        & 4. Le système lui associe le rôle \texttt{ROLE\_DEPARTMENT}.\\
+        & 5. Un message de confirmation s'affiche à l'écran. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. L'administrateur saisit une adresse e-mail existante.\\
+        & 3'.1 Le système refuse la création et affiche un message d'alerte. \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Erreur réseau lors de la transaction.\\
+        & 1'.1 Le système affiche un message d'échec de communication. \\ \hline
+    \end{tabularx}
+\end{table}
+
+La fiche ci-après décrit le cas d'utilisation \textbf{\og Désactiver un compte \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Désactiver un compte »}
+    \label{tab:txt_desactiver}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Désactiver un compte \\ \hline
+        \textbf{Acteur} & Administrateur Municipal \\ \hline
+        \textbf{Pré-condition} & Le compte ciblé est actuellement actif dans Keycloak. \\ \hline
+        \textbf{Post-condition} & Le compte ciblé est désactivé et l'utilisateur ne peut plus s'authentifier. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'administrateur sélectionne le compte à bloquer dans sa liste.\\
+        & 2. Il clique sur le commutateur « Bloquer / Désactiver ».\\
+        & 3. Le backend appelle l'API administrative de Keycloak pour modifier l'attribut \texttt{enabled} de l'utilisateur à \texttt{false}.\\
+        & 4. Le compte est immédiatement désactivé et la console affiche un succès. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. Le compte est déjà désactivé.\\
+        & 3'.1 L'administrateur peut l'activer en basculant le commutateur à \texttt{true}. \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Problème de droits d'accès administratifs.\\
+        & 1'.1 Le système renvoie un code d'erreur \texttt{403 Forbidden}. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Afin de représenter l'enchaînement temporel des interactions système, nous avons modélisé les diagrammes de séquences système de ce deuxième sprint :
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_authentifier.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «S'authentifier»}
+    \label{fig:seq_sys_auth}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_inscrire.png}
+    \caption{Diagramme de séquence système du cas d’utilisation «S’inscrire»}
+    \label{fig:seq_sys_insc}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_modifier_profil.png}
+    \caption{Diagramme de séquence système du cas d’utilisation «Modifier Profil»}
+    \label{fig:seq_sys_modif}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_consulter_comptes.png}
+    \caption{Diagramme de séquence système du cas d’utilisation «Consulter Comptes»}
+    \label{fig:seq_sys_consulter}
+\end{figure}
+
+\paragraph{Conception du sprint 2}
+Le diagramme de classes de cette partie « Gestion d'accès, profils et sécurité » définit la structure statique de nos composants d'authentification :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{classes_sprint2.png}
+    \caption{Diagramme de classe de la «Gestion d’accès et de profil»}
+    \label{fig:class_sprint2}
+\end{figure}
+
+Les diagrammes de séquence de conception modélisent les interactions précises entre les classes internes (Angular Component, Spring Controller, Keycloak client, JPA Repository, Database) :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_auth.png}
+    \caption{Diagramme de séquence de conception «S’authentifier»}
+    \label{fig:seq_concep_auth}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_insc.png}
+    \caption{Diagramme de séquence de conception «S’inscrire»}
+    \label{fig:seq_concep_insc}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_modif.png}
+    \caption{Diagramme de séquence de conception «Modifier Profil»}
+    \label{fig:seq_concep_modif}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_desac.png}
+    \caption{Diagramme de séquence de conception «Activer / Désactiver compte»}
+    \label{fig:seq_concep_desac}
+\end{figure}
+
+\subsection{Réalisation}
+Les interfaces suivantes illustrent les écrans réels développés au cours de ce deuxième sprint :
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.12 : Interface d'Authentification Unique Keycloak SSO]}\hss}\vfill}}
+    \caption{Interface d’authentification}
+    \label{fig:ui_auth}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.13 : Interface d'Inscription Citoyenne mobile Flutter]}\hss}\vfill}}
+    \caption{Interface d’inscription}
+    \label{fig:ui_insc}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.14 : Interface d'administration et de gestion des comptes d'agents]}\hss}\vfill}}
+    \caption{Interface de gestion des comptes utilisateurs}
+    \label{fig:ui_gestion_util}
+\end{figure}
+
+\subsection{Phase de tests}
+Pour valider la robustesse de notre brique de sécurité, nous avons conduit des tests unitaires et d'intégration :
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 3.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.15 : Test de création de compte avec adresse e-mail existante (Rejet d'inscription)]}\hss}\vfill}}
+    \caption{Test d'une adresse e-mail déjà utilisée}
+    \label{fig:test_email_utilise}
+\end{figure}
+
+\subsection{Sprint Review}
+Les fonctionnalités développées ont été validées en visioconférence auprès de notre Product Owner \textbf{M. Rami Bouafif (HRMAPS)}. L'interfaçage transparent avec Keycloak OIDC et la sécurisation des routes Spring Boot Security ont été jugées conformes.
+
+\subsection{Sprint Rétrospective}
+Le tableau ci-dessous synthétise le bilan de cette itération :
+
+\begin{table}[H]
+    \centering
+    \caption{Sprint Rétrospective du Sprint 2}
+    \label{tab:retro_sprint2}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|X|X|}
+        \hline
+        \textbf{Points positifs} & \textbf{Difficultés rencontrées} \\ \hline
+        - L'authentification centralisée fonctionne parfaitement sur Angular et Flutter.\\
+        - L'initialisation automatique du compte citoyen en base de données lors de son inscription est synchrone.\\
+        - Les blocages de comptes via Keycloak se répercutent instantanément. & 
+        - Des conflits de dialectes et de versions d'intercepteurs Spring Security OAuth2 en Spring Boot 3 ont initialement ralenti le démarrage.\\
+        - La redirection Keycloak mobile (\textit{custom scheme}) a nécessité des ajustements. \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------------------------
+% 3.4. SPRINT 3 : GESTION DES INCIDENTS ET CARTOGRAPHIE
+% ------------------------------------------------------------------------------
+\section{Sprint 3 : Gestion des incidents et cartographie}
+
+\subsection{Sprint Goal}
+Ce sprint a pour objectif de mettre en place le cœur opérationnel de l'application citoyenne mobile : la cartographie Leaflet interactive, le signalement d'anomalies publiques avec photos et coordonnées géographiques GPS, et le suivi de résolution en temps réel directement sur la carte de la ville.
+
+\subsection{Sprint Backlog}
+Le backlog planifié pour le sprint 3 est récapitulé dans le tableau suivant :
+
+\begin{table}[H]
+    \centering
+    \caption{Sprint Backlog du Sprint 3}
+    \label{tab:backlog_sprint3}
+    \vspace{0.2cm}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{|l|X|c|}
+        \hline
+        \textbf{User Stories} & \textbf{Tâches de développement et d'intégration} & \textbf{Durée} \\ \hline
+        \textbf{US-14 : Consulter détails} & 
+        - Concevoir l'API REST de récupération des détails d'un incident.\\
+        & - Développer l'interface mobile Flutter de détails (photo, commentaires).\\
+        & - Tester le chargement dynamique des fiches. & 2j \\ \hline
+        \textbf{US-15 : Consulter la carte} &
+        - Intégrer les fonds de cartes Leaflet.js et OpenStreetMap sur Flutter.\\
+        & - Développer le backend d'extraction des anomalies actives. & 2j \\ \hline
+        \textbf{US-16 : Signaler incident} &
+        - Développer le endpoint Spring Boot d'upload d'images multipart.\\
+        & - Intégrer la capture photo par l'appareil mobile et l'extraction GPS.\\
+        & - Réaliser la persistance PostGIS (\texttt{Geometry(Point)}). & 2j \\ \hline
+        \textbf{US-17 : Modifier signalement} &
+        - Créer les APIs de modification de signalements non encore validés.\\
+        & - Développer les formulaires de mise à jour mobile. & 2j \\ \hline
+        \textbf{US-18 : Supprimer signalement} &
+        - Créer l'API REST administrative d'archivage ou suppression d'incident.\\
+        & - Développer le bouton d'action sur la console d'administration. & 1j \\ \hline
+        \textbf{US-19 : Filtrer incidents} &
+        - Implémenter les filtres géographiques et d'états dans le backend.\\
+        & - Créer les widgets de filtres sur la carte mobile Flutter. & 1j \\ \hline
+        \textbf{US-20 : Rechercher incident} &
+        - Développer l'autocomplétion et la recherche textuelle d'incidents.\\
+        & - Intégrer la carte de recherche sur la carte mobile et web. & 1j \\ \hline
+        \textbf{US-21 : Consulter My Reports} &
+        - Développer l'endpoint de récupération des incidents déclarés par le citoyen connecté.\\
+        & - Créer l'interface \textit{My Reports} sur Flutter et sur le web. & 1j \\ \hline
+        \textbf{US-22 : Suivre le statut de ses reports} &
+        - Afficher le statut détaillé de chaque report personnel.\\
+        & - Valider le chargement des fiches d'incidents déclarés par l'utilisateur. & 1j \\ \hline
+        \textbf{US-23 : Commenter un incident} &
+        - Développer l'ajout et l'affichage des commentaires sur les fiches d'incidents.\\
+        & - Tester les commentaires côté mobile et web. & 1j \\ \hline
+        \textbf{US-24 : Landing page} &
+        - Développer le portail web d'accueil d'information de SafeCity-Connect.\\
+        & - Assurer le responsive design de la page de présentation publique. & 1j \\ \hline
+    \end{tabularx}
+\end{table}
+
+\subsection{Implémentation du sprint 3}
+
+\paragraph{Expression des besoins}
+Dans cette section, nous présentons l'analyse des besoins du troisième sprint de notre projet. Cette étude comprend l'élaboration du diagramme de cas d'utilisation associé, la description textuelle des cas d'utilisation et la modélisation des interactions système.
+
+La figure suivante représente le diagramme de cas d'utilisation du sprint 3 :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{use_case_global.png}
+    \caption{Diagramme de cas d'utilisation du sprint 3}
+    \label{fig:uc_sprint3}
+\end{figure}
+
+Ce diagramme de cas d'utilisation illustre les interactions d'affichage cartographique, de signalements géolocalisés, de consultation des reports personnels et de commentaires entre le Citoyen, le Visiteur non connecté, l'Administrateur et le système.
+
+Le tableau suivant décrit le cas d'utilisation \textbf{\og Consulter la carte et les incidents \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Consulter les incidents »}
+    \label{tab:txt_cons_offres}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Consulter la carte et les incidents publics \\ \hline
+        \textbf{Acteur} & Visiteur non connecté, Citoyen, Administrateur / Service technique (DEPARTMENT) \\ \hline
+        \textbf{Pré-condition} & Aucune authentification requise pour la carte publique (\texttt{GET /api/public/**}). \\ \hline
+        \textbf{Post-condition} & L'ensemble des marqueurs d'incidents actifs est affiché sur la carte. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le visiteur ou l'utilisateur ouvre la page d'accueil ou le module cartographique (\texttt{PublicMapComponent}).\\
+        & 2. Le backend Spring Boot interroge PostgreSQL/PostGIS via les endpoints publics.\\
+        & 3. Le système renvoie la liste des incidents géo-référencés.\\
+        & 4. L'application affiche les marqueurs de couleurs sur le fond de carte Leaflet. \\ \hline
+        \textbf{Scénario alternatif} & Néant \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Problème de récupération des coordonnées GPS.\\
+        & 1'.1 Le système affiche un fond de carte vide avec un message d'erreur. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{\og Consulter ses reports \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Consulter My Reports »}
+    \label{tab:txt_favs}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Consulter ses reports personnels \\ \hline
+        \textbf{Acteur} & Citoyen \\ \hline
+        \textbf{Pré-condition} & Le citoyen est connecté et a déjà déclaré au moins un incident. \\ \hline
+        \textbf{Post-condition} & La liste de ses propres reports s'affiche à l'écran avec leur statut. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le citoyen accède à l'onglet \textit{My Reports} de son espace personnel.\\
+        & 2. Le backend interroge les incidents dont \texttt{reporterKeycloakId} correspond à l'utilisateur connecté.\\
+        & 3. Le système charge et affiche les détails et les statuts de ses reports.\\
+        & 4. Le citoyen peut cliquer sur l'un d'eux pour ouvrir sa fiche détaillée. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. L'utilisateur n'a encore déclaré aucun incident.\\
+        & 3'.1 L'application affiche un message « Aucun report trouvé ». \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Échec de la communication avec le serveur.\\
+        & 1'.1 Le système affiche une alerte technique. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{\og Signaler un incident \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Signaler un incident »}
+    \label{tab:txt_ajouter_offre}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Signaler un incident (avec photo et GPS) \\ \hline
+        \textbf{Acteur} & Citoyen \\ \hline
+        \textbf{Pré-condition} & Le citoyen est authentifié et dispose d'un smartphone avec GPS et caméra. \\ \hline
+        \textbf{Post-condition} & Un nouvel incident est créé au statut \texttt{PENDING} et stocké dans PostGIS. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le citoyen clique sur « Signaler une anomalie » sur l'application mobile.\\
+        & 2. L'appareil photo s'active ; il prend une photo nette du problème public.\\
+        & 3. L'application récupère la position GPS de l'appareil (\texttt{latitude, longitude}).\\
+        & 4. L'utilisateur saisit un titre et une description facultative.\\
+        & 5. Il clique sur « Soumettre le signalement ».\\
+        & 6. Le backend persiste le rapport avec le type de données spatiales PostGIS.\\
+        & 7. Un message de succès s'affiche. \\ \hline
+        \textbf{Scénario alternatif} &
+        4'. L'utilisateur désactive la capture GPS.\\
+        & 4'.1 L'application lui demande de placer manuellement le marqueur sur la carte interactive.\\
+        & 4'.2 L'utilisateur valide l'emplacement et poursuit. \\ \hline
+        \textbf{Cas d’erreur} &
+        2'. L'accès à la caméra ou au GPS est bloqué par le système d'exploitation.\\
+        & 2'.1 L'application affiche une demande d'autorisation de permissions. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{\og Modifier un signalement \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Modifier un signalement »}
+    \label{tab:txt_mod_offre}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Modifier un signalement non validé \\ \hline
+        \textbf{Acteur} & Citoyen \\ \hline
+        \textbf{Pré-condition} & L'incident est à l'état \texttt{PENDING} (non encore traité par la mairie). \\ \hline
+        \textbf{Post-condition} & Les détails de l'incident sont correctement modifiés en base de données. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le citoyen accède à la liste de ses signalements personnels.\\
+        & 2. Il sélectionne un signalement au statut \texttt{PENDING} et clique sur « Modifier ».\\
+        & 3. Le système affiche le formulaire pré-rempli.\\
+        & 4. L'utilisateur modifie la description ou la catégorie et valide.\\
+        & 5. Le backend enregistre les nouvelles valeurs.\\
+        & 6. Une alerte confirme les changements. \\ \hline
+        \textbf{Scénario alternatif} &
+        2'. L'incident a déjà été validé par la mairie (\texttt{VALIDATED} ou \texttt{ASSIGNED}).\\
+        & 2'.1 L'application masque le bouton de modification et affiche le message « Incident en cours de traitement non modifiable ». \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. L'utilisateur tente de forcer l'API de modification sur un incident tiers.\\
+        & 1'.1 Le backend rejette l'accès avec un code d'erreur \texttt{403 Forbidden}. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{\og Supprimer un signalement \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Supprimer un signalement »}
+    \label{tab:txt_suppr_offre}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Supprimer un signalement \\ \hline
+        \textbf{Acteur} & Administrateur Municipal \\ \hline
+        \textbf{Pré-condition} & L'administrateur est authentifié sur la console web d'administration. \\ \hline
+        \textbf{Post-condition} & L'incident est définitivement archivé ou supprimé du système. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'administrateur sélectionne la fiche d'un incident obsolète ou erroné.\\
+        & 2. Il clique sur le bouton « Supprimer ».\\
+        & 3. Un message demande de confirmer la suppression définitive.\\
+        & 4. L'administrateur valide la confirmation.\\
+        & 5. Le backend supprime l'enregistrement SQL et l'image associée.\\
+        & 6. La console web actualise l'affichage cartographique. \\ \hline
+        \textbf{Scénario alternatif} &
+        4'. L'administrateur annule la confirmation de suppression.\\
+        & 4'.1 L'anomalie est conservée sans modification. \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Échec de la base de données lors de la suppression.\\
+        & 1'.1 Le système renvoie un message d'erreur d'archivage. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{\og Rechercher un incident \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Rechercher un incident »}
+    \label{tab:txt_rech_offre}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Rechercher un incident \\ \hline
+        \textbf{Acteur} & Citoyen, Administrateur / Service technique (DEPARTMENT), Administrateur \\ \hline
+        \textbf{Pré-condition} & L'utilisateur est sur le module cartographique. \\ \hline
+        \textbf{Post-condition} & Les marqueurs correspondant à la recherche sont mis en valeur. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'utilisateur saisit un mot-clé ou une adresse dans la barre de recherche.\\
+        & 2. La carte effectue une requête d'autocomplétion géospatiale.\\
+        & 3. Le backend filtre et extrait les incidents correspondants en base.\\
+        & 4. La carte centre sa vue géographique sur les résultats trouvés. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. Aucun incident ne correspond à la zone ou au terme saisi.\\
+        & 3'.1 L'application affiche une info-bulle « Aucun incident trouvé pour cette recherche ». \\ \hline
+        \textbf{Cas d’erreur} & Néant \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{\og Filtrer les incidents \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Filtrer les incidents »}
+    \label{tab:txt_filtre}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Filtrer les incidents \\ \hline
+        \textbf{Acteur} & Citoyen, Administrateur / Service technique (DEPARTMENT), Administrateur \\ \hline
+        \textbf{Pré-condition} & La carte des incidents est ouverte à l'écran. \\ \hline
+        \textbf{Post-condition} & Seuls les incidents correspondants aux filtres sélectionnés s'affichent. \\ \hline
+        \textbf{Scénario nominal} &
+        1. L'utilisateur clique sur le panneau de filtres géographiques.\\
+        & 2. Il sélectionne des filtres (ex: Catégorie = \texttt{POTHOLE}, Statut = \texttt{RESOLVED}).\\
+        & 3. Le système applique les critères et interroge la base PostGIS.\\
+        & 4. La carte rafraîchit ses marqueurs pour n'afficher que les correspondances. \\ \hline
+        \textbf{Scénario alternatif} &
+        3'. Aucun incident ne correspond aux filtres cumulés sélectionnés.\\
+        & 3'.1 La carte se vide et affiche un message informatif. \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Échec de chargement des paramètres de filtrage.\\
+        & 1'.1 Le système affiche les filtres grisés. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Le tableau suivant décrit le cas d'utilisation \textbf{\og Commenter un incident \fg{}} :
+
+\begin{table}[H]
+    \centering
+    \caption{Description textuelle du cas d'utilisation « Commenter un incident »}
+    \label{tab:txt_retrait_fav}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Élément} & \textbf{Description} \\ \hline
+        \textbf{Cas d’utilisation} & Ajouter un commentaire sur un incident \\ \hline
+        \textbf{Acteur} & Citoyen \\ \hline
+        \textbf{Pré-condition} & Le citoyen est authentifié et consulte la fiche détaillée d'un incident. \\ \hline
+        \textbf{Post-condition} & Le commentaire est enregistré et visible dans la discussion de l'incident. \\ \hline
+        \textbf{Scénario nominal} &
+        1. Le citoyen ouvre la fiche détaillée d'un incident depuis la carte ou \textit{My Reports}.\\
+        & 2. Il saisit une précision ou une remarque dans la zone de commentaire.\\
+        & 3. Le backend crée une entrée dans \texttt{incident\_comments}.\\
+        & 4. L'application actualise la discussion et affiche le nouveau commentaire. \\ \hline
+        \textbf{Scénario alternatif} & Néant \\ \hline
+        \textbf{Cas d’erreur} &
+        1'. Session expirée ou erreur réseau.\\
+        & 1'.1 L'opération échoue et le commentaire n'est pas publié. \\ \hline
+    \end{tabularx}
+\end{table}
+
+Afin de représenter l'enchaînement temporel des interactions système, nous présentons ci-dessous les diagrammes de séquences système de ce troisième sprint :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_consulter_inc.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Consulter les incidents»}
+    \label{fig:seq_sys_consulter_inc}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_signaler.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Signaler un incident»}
+    \label{fig:seq_sys_signaler}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_modifier.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Modifier un signalement»}
+    \label{fig:seq_sys_modifier}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_suppr.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Supprimer un signalement»}
+    \label{fig:seq_sys_suppr}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_recherche.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Rechercher un incident»}
+    \label{fig:seq_sys_recherche}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_sys_filtre.png}
+    \caption{Diagramme de séquence système du cas d'utilisation «Filtrer les incidents»}
+    \label{fig:seq_sys_filtre}
+\end{figure}
+
+\paragraph{Conception du sprint 3}
+Le diagramme de classes de cette partie « Gestion des incidents et cartographie » définit la structure de nos tables géospatiales PostgreSQL/PostGIS et de nos entités métiers Spring Boot associées :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{classes_global.png}
+    \caption{Diagramme de classe de la «Gestion des incidents et cartographie»}
+    \label{fig:class_sprint3}
+\end{figure}
+
+Les diagrammes de séquence de conception modélisent les interactions logiques internes des classes lors de l'exécution des fonctionnalités :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_consulter_inc.png}
+    \caption{Diagramme de séquence de conception «Consulter les incidents»}
+    \label{fig:seq_concep_consulter_inc}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_signaler.png}
+    \caption{Diagramme de séquence de conception «Signaler un incident»}
+    \label{fig:seq_concep_signaler}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_modifier.png}
+    \caption{Diagramme de séquence de conception «Modifier un signalement»}
+    \label{fig:seq_concep_modifier}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{seq_concep_suppr.png}
+    \caption{Diagramme de séquence de conception «Supprimer un signalement»}
+    \label{fig:seq_concep_suppr}
+\end{figure}
+
+\subsection{Réalisation}
+Les interfaces graphiques suivantes présentent les écrans cartographiques de notre plateforme :
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.28 : Interface web Angular de la liste et carte des incidents (Admin)]}\hss}\vfill}}
+    \caption{Interface web de la liste et carte des incidents (Admin)}
+    \label{fig:ui_web_incidents}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.29 : Interface mobile Flutter de la carte interactive de signalements]}\hss}\vfill}}
+    \caption{Interface mobile de la carte interactive de signalements}
+    \label{fig:ui_mobile_carte}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.30 : Interface mobile Flutter de détails d'une fiche d'incident et commentaires]}\hss}\vfill}}
+    \caption{Interface mobile de détails d'une fiche d'incident}
+    \label{fig:ui_mobile_details}
+\end{figure}
+
+\subsection{Phase de tests}
+Afin de garantir que les contraintes d'intégrité géospatiales et que les formulaires de signalements fonctionnent sans erreur, nous avons mené des tests automatisés :
+
+\begin{figure}[H]
+    \centering
+    \framebox[\linewidth]{\vbox to 3.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.31 : Test de validation des champs obligatoires et des coordonnées GPS (Rejet d'envoi)]}\hss}\vfill}}
+    \caption{Test de validation des champs obligatoires et des coordonnées GPS}
+    \label{fig:test_champs_signalement}
+\end{figure}
+
+\subsection{Sprint Review}
+La démonstration de la carte interactive mobile Flutter et du formulaire de signalement géo-localisé avec photo a été présentée et validée à notre Product Owner chez \textbf{HRMAPS, M. Rami Bouafif}. La fluidité du zoom Leaflet et la précision GPS extraite ont été jugées excellentes.
+
+\subsection{Sprint Rétrospective}
+Le tableau ci-dessous synthétise le bilan de cette troisième itération :
+
+\begin{table}[H]
+    \centering
+    \caption{Sprint Rétrospective du Sprint 3}
+    \label{tab:retro_sprint3}
+    \vspace{0.2cm}
+    \small
+    \begin{tabularx}{\textwidth}{|X|X|}
+        \hline
+        \textbf{Points positifs} & \textbf{Difficultés rencontrées} \\ \hline
+        - Le chargement et le rendu des marqueurs spatialisés Leaflet est extrêmement rapide (moins d'une seconde pour charger 100 points).\\
+        - Le plugin de capture de coordonnées GPS est stable et précis sur Android et iOS. & 
+        - Des problèmes de lenteur d'affichage des marqueurs se sont déclarés lors de l'accumulation de milliers d'incidents.\\
+        & $\rightarrow$ Résolu en implémentant le clustering de marqueurs (Marker Clustering) sur mobile. \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+% ------------------------------------------------------------------------------
+% CONCLUSION
+% ------------------------------------------------------------------------------
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
-Le Sprint 0 s'est achevé avec succès. Nous avons défini l'architecture multiniveau sécurisée de \textit{SafeCity-Connect}, installé les environnements de développement et validé l'empilement technologique choisi. Forts de cette infrastructure technique opérationnelle, nous pouvons aborder le premier sprint fonctionnel présenté dans le chapitre suivant, dédié à la gestion des comptes, de l'authentification unifiée et de la sécurité des utilisateurs.
+La première release a été couronnée de succès. Grâce aux Sprints 1, 2 et 3, les bases de notre écosystème logiciel sont posées : authentification unifiée Keycloak SSO robuste, gestion des rôles de sécurité de la commune, et signalement d'incidents géo-localisés performant sur carte Leaflet.
+
+Le chapitre suivant sera consacré au développement et aux tests opérationnels de la deuxième release de notre application, la Release 2.

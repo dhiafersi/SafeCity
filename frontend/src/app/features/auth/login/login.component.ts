@@ -81,6 +81,11 @@ import { AuthService } from '../../../core/services/auth.service';
             {{ loading ? 'Signing in...' : 'Sign in' }}
           </button>
         </form>
+
+        <p class="signup-link">
+          New citizen account?
+          <a routerLink="/signup">Create account</a>
+        </p>
       </section>
 
       <aside class="status-panel">
@@ -290,6 +295,17 @@ import { AuthService } from '../../../core/services/auth.service';
       color:#ffb4ad;
       font-size:.85rem;
     }
+    .signup-link {
+      margin:0;
+      text-align:center;
+      color:#9fb0bf;
+      font-size:.9rem;
+    }
+    .signup-link a {
+      color:#4fc3f7;
+      font-weight:800;
+      text-decoration:none;
+    }
     .status-panel {
       position:absolute;
       right:2rem;
@@ -345,6 +361,13 @@ export class LoginComponent {
     private router: Router,
     private route: ActivatedRoute
   ) {}
+
+  ngOnInit(): void {
+    const username = this.route.snapshot.queryParamMap.get('username');
+    if (username) {
+      this.username = username;
+    }
+  }
 
   async submit(): Promise<void> {
     if (!this.username.trim() || !this.password) return;

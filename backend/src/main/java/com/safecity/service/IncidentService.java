@@ -97,6 +97,11 @@ public class IncidentService {
                 keycloakId, username, "Possible duplicate of #" + duplicateId);
         }
         log.info("Incident created id={} by user={}", saved.getId(), username);
+        try {
+            emailNotificationService.sendNewIncidentAlert(saved);
+        } catch (Exception e) {
+            log.warn("Failed to send new incident alert: {}", e.getMessage());
+        }
         return toResponse(saved);
     }
 
