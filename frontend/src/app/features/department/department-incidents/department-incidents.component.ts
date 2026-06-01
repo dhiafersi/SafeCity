@@ -33,7 +33,7 @@ import { IncidentResponse, IncidentService, PageResponse } from '../../../core/s
             <img *ngIf="incident.departmentFixPhotoPath" [src]="photoUrl(incident.departmentFixPhotoPath)" alt="Fix proof">
             <ng-container *ngIf="incident.status === 'ASSIGNED'">
               <input type="file" accept="image/*" (change)="onFileSelected(incident.id, $event)">
-              <button (click)="submitFix(incident)" [disabled]="!selectedFiles[incident.id] || updating === incident.id">
+              <button (click)="submitFix(incident)" [disabled]="updating === incident.id">
                 Submit fix photo
               </button>
             </ng-container>
@@ -46,8 +46,17 @@ import { IncidentResponse, IncidentService, PageResponse } from '../../../core/s
       </div>
 
       <div class="empty" *ngIf="!loading && !incidents.length">No assigned incidents yet.</div>
-      <div class="toast" *ngIf="toastMsg" [class]="toastType">{{ toastMsg }}</div>
+    <div class="toast" *ngIf="toastMsg" [class]="toastType">{{ toastMsg }}</div>
+
+    <!-- Customized Pop-up for Missing Photo -->
+    <div class="custom-modal-overlay" *ngIf="showPhotoAlert">
+      <div class="custom-modal">
+        <h3>⚠️ Action requise</h3>
+        <p>Veuillez sélectionner une photo comme preuve de résolution avant de soumettre.</p>
+        <button (click)="showPhotoAlert = false">Compris</button>
+      </div>
     </div>
+  </div>
   `,
   styles: [`
     .department-page { padding:1.5rem; background:#0f0f1a; color:#fff; min-height:calc(100vh - 60px); }
@@ -75,10 +84,16 @@ import { IncidentResponse, IncidentService, PageResponse } from '../../../core/s
     a { color:#9bdcf8; text-decoration:none; }
     .review { color:#ffb4ad; }
     .waiting, .loading, .empty { color:#8d98a8; }
-    .toast { position:fixed; right:1rem; bottom:1rem; padding:.75rem 1rem; border-radius:8px; }
+    .toast { position:fixed; right:1rem; bottom:1rem; padding:.75rem 1rem; border-radius:8px; z-index:999; }
     .toast.success { background:#1b5e20; color:#c8e6c9; }
     .toast.error { background:#7f0000; color:#ffb4ad; }
     @media (max-width:800px) { .item { grid-template-columns:1fr; } }
+    .custom-modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.75); display:flex; align-items:center; justify-content:center; z-index:9999; backdrop-filter:blur(3px); }
+    .custom-modal { background:#1e1e2f; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:1.8rem; max-width:320px; text-align:center; box-shadow:0 15px 35px rgba(0,0,0,0.5); }
+    .custom-modal h3 { color:#ffca28; margin-top:0; font-size:1.2rem; }
+    .custom-modal p { color:#c4ccd8; margin:1rem 0 1.5rem; line-height:1.5; font-size:0.95rem; }
+    .custom-modal button { background:#4fc3f7; color:#0f0f1a; border:none; padding:0.6rem 1.5rem; border-radius:8px; font-weight:bold; cursor:pointer; width:100%; transition:background 0.2s; }
+    .custom-modal button:hover { background:#29b6f6; }
   `]
 })
 export class DepartmentIncidentsComponent implements OnInit {
@@ -88,6 +103,7 @@ export class DepartmentIncidentsComponent implements OnInit {
   updating: number | null = null;
   toastMsg = '';
   toastType: 'success' | 'error' = 'success';
+  showPhotoAlert = false;
 
   constructor(private incidentService: IncidentService) {}
 
@@ -116,7 +132,10 @@ export class DepartmentIncidentsComponent implements OnInit {
 
   submitFix(incident: IncidentResponse): void {
     const file = this.selectedFiles[incident.id];
-    if (!file) return;
+    if (!file) {
+      this.showPhotoAlert = true;
+      return;
+    }
 
     this.updating = incident.id;
     this.incidentService.submitDepartmentFix(incident.id, file).subscribe({

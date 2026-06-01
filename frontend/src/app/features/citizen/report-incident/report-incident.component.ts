@@ -23,30 +23,41 @@ import { IncidentService } from '../../../core/services/incident.service';
             <input id="title" formControlName="title" type="text"
                    placeholder="e.g. Large pothole on Main Street" class="form-control"
                    [class.error]="isInvalid('title')">
-            <span class="error-msg" *ngIf="isInvalid('title')">Title is required</span>
+            <span class="error-msg" *ngIf="isInvalid('title')">
+              <span *ngIf="form.get('title')?.hasError('required')">Title is required.</span>
+              <span *ngIf="form.get('title')?.hasError('minlength')">Title must be at least 5 characters long.</span>
+              <span *ngIf="form.get('title')?.hasError('maxlength')">Title cannot exceed 255 characters.</span>
+            </span>
           </div>
 
           <!-- Category -->
           <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category" formControlName="category" class="form-control">
+            <label for="category">Category *</label>
+            <select id="category" formControlName="category" class="form-control"
+                    [class.error]="isInvalid('category')">
               <option value="">-- Select a category --</option>
               <option *ngFor="let cat of categories" [value]="cat.value">
                 {{ cat.label }}
               </option>
             </select>
+            <span class="error-msg" *ngIf="isInvalid('category')">Category is required.</span>
           </div>
 
           <!-- Description -->
           <div class="form-group">
-            <label for="description">Description</label>
+            <label for="description">Description *</label>
             <textarea id="description" formControlName="description" rows="3"
-                      placeholder="Provide additional details..." class="form-control"></textarea>
+                      placeholder="Provide additional details (e.g. size, severity, spot)..." 
+                      class="form-control" [class.error]="isInvalid('description')"></textarea>
+            <span class="error-msg" *ngIf="isInvalid('description')">
+              <span *ngIf="form.get('description')?.hasError('required')">Description is required.</span>
+              <span *ngIf="form.get('description')?.hasError('minlength')">Description must be at least 10 characters long.</span>
+            </span>
           </div>
 
           <!-- GPS Location -->
           <div class="form-group">
-            <label>📍 Location (Optional)</label>
+            <label>📍 GPS Location *</label>
             <button type="button" class="btn-locate" (click)="captureLocation()">
               <span *ngIf="!locationLoading">📡 Capture My GPS Location</span>
               <span *ngIf="locationLoading">⏳ Detecting location...</span>
@@ -56,10 +67,22 @@ import { IncidentService } from '../../../core/services/incident.service';
                  Lng: {{ form.value.longitude | number:'1.6-6' }}
             </div>
             <div class="location-manual">
-              <input formControlName="latitude" type="number" placeholder="Latitude"
-                     class="form-control half" step="any">
-              <input formControlName="longitude" type="number" placeholder="Longitude"
-                     class="form-control half" step="any">
+              <div class="coord-input-container">
+                <input formControlName="latitude" type="number" placeholder="Latitude *"
+                       class="form-control" step="any" [class.error]="isInvalid('latitude')">
+                <span class="error-msg" *ngIf="isInvalid('latitude')">
+                  <span *ngIf="form.get('latitude')?.hasError('required')">Latitude is required.</span>
+                  <span *ngIf="form.get('latitude')?.hasError('min') || form.get('latitude')?.hasError('max')">Must be between -90 and 90.</span>
+                </span>
+              </div>
+              <div class="coord-input-container">
+                <input formControlName="longitude" type="number" placeholder="Longitude *"
+                       class="form-control" step="any" [class.error]="isInvalid('longitude')">
+                <span class="error-msg" *ngIf="isInvalid('longitude')">
+                  <span *ngIf="form.get('longitude')?.hasError('required')">Longitude is required.</span>
+                  <span *ngIf="form.get('longitude')?.hasError('min') || form.get('longitude')?.hasError('max')">Must be between -180 and 180.</span>
+                </span>
+              </div>
             </div>
             <input formControlName="address" type="text" placeholder="Street address (optional)"
                    class="form-control">
@@ -144,7 +167,8 @@ import { IncidentService } from '../../../core/services/incident.service';
     .btn-locate:hover { background:rgba(79,195,247,.12); }
 
     .location-display { color:#81c784; font-size:.85rem; margin-bottom:.6rem; }
-    .location-manual { display:flex; gap:.5rem; margin-bottom:.5rem; }
+    .location-manual { display:flex; gap:.5rem; margin-bottom:.5rem; align-items: flex-start; }
+    .coord-input-container { flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
 
     .photo-drop-zone {
       border:2px dashed rgba(255,255,255,.2); border-radius:10px;
@@ -206,11 +230,11 @@ export class ReportIncidentComponent implements OnInit {
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      title:       ['', [Validators.required, Validators.maxLength(255)]],
-      description: [''],
-      category:    [''],
-      latitude:    [null, [Validators.min(-90), Validators.max(90)]],
-      longitude:   [null, [Validators.min(-180), Validators.max(180)]],
+      title:       ['', [Validators.required, Validators.minLength(5), Validators.maxLength(255)]],
+      description: ['', [Validators.required, Validators.minLength(10)]],
+      category:    ['', [Validators.required]],
+      latitude:    [null, [Validators.required, Validators.min(-90), Validators.max(90)]],
+      longitude:   [null, [Validators.required, Validators.min(-180), Validators.max(180)]],
       address:     [''],
     });
   }

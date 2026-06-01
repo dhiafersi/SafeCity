@@ -52,7 +52,7 @@ import {
       </div>
 
       <!-- Map -->
-      <div class="map-wrapper">
+      <div class="map-wrapper" [class.heatmap-active]="heatmapVisible">
         <div #mapEl id="leaflet-map"></div>
       </div>
 
@@ -117,6 +117,15 @@ import {
 
     .map-wrapper { flex:1; position:relative; }
     #leaflet-map  { width:100%; height:100%; }
+    .map-wrapper ::ng-deep .leaflet-heatmap-layer {
+      z-index:450 !important;
+      opacity:.78;
+      pointer-events:none;
+    }
+    .map-wrapper.heatmap-active ::ng-deep .leaflet-marker-icon {
+      opacity:.42 !important;
+      filter:saturate(.7);
+    }
 
     .legend {
       display:flex; gap:1.5rem; padding:.5rem 1.5rem; flex-shrink:0;
@@ -190,6 +199,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       this.validatedCount = this.incidents.filter(i => i.status === 'VALIDATED').length;
       this.resolvedCount  = this.incidents.filter(i => i.status === 'RESOLVED').length;
       this.renderMarkers();
+      this.renderHeatmap();
     });
 
     // Load heatmap data
@@ -250,29 +260,123 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private renderHeatmap(): void {
     if (this.heatLayer) {
       this.map.removeLayer(this.heatLayer);
+      this.heatLayer = null;
     }
 
-    if (this.heatmapPoints.length === 0) return;
+    const points = this.normalizedHeatmapPoints();
+    if (points.length === 0) return;
 
     // Build heatmap data: [lat, lng, intensity]
-    const maxCount = Math.max(...this.heatmapPoints.map(p => p.count));
-    const data = this.heatmapPoints.map(p => [p.lat, p.lng, Math.max(0.1, p.count / maxCount)]);
+    const maxCount = Math.max(...points.map(p => p.count), 1);
+    const data = points.map(p => {
+      const normalizedCount = p.count / maxCount;
+      const intensity = Math.min(0.88, Math.max(0.42, Math.sqrt(normalizedCount) * 0.82));
+      return [p.lat, p.lng, intensity];
+    });
 
     // Access Leaflet Heat through the global window object
     const L = (window as any).L;
     if (L && L.heatLayer) {
       this.heatLayer = L.heatLayer(data, {
-        radius: 35,
-        blur: 25,
-        maxZoom: 17,
-        gradient: { 0.2: '#1a237e', 0.5: '#e65100', 0.8: '#b71c1c', 1.0: '#ff1744' },
+        radius: 88,
+        blur: 44,
+        max: 1,
+        minOpacity: 0.58,
+        maxZoom: 15,
+        gradient: {
+          0.15: '#00bcd4',
+          0.35: '#00c853',
+          0.55: '#ffee58',
+          0.75: '#ff8f00',
+          1.00: '#e53935',
+        },
       });
 
       if (this.heatmapVisible && this.heatLayer) {
+        this.focusHeatmapIfOffscreen();
         this.heatLayer.addTo(this.map);
+        this.heatLayer.redraw?.();
+        this.bringHeatmapForward();
       }
     } else {
       console.warn('Leaflet Heat library not available');
+    }
+  }
+
+  private normalizedHeatmapPoints(): HeatmapPoint[] {
+    const apiPoints = this.heatmapPoints
+      .map(p => ({
+        lat: Number(p.lat),
+        lng: Number(p.lng),
+        count: Math.max(1, Number(p.count) || 1),
+      }))
+      .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+
+    if (apiPoints.length > 0) return this.aggregateCityCenterPoints(apiPoints);
+
+    const incidentPoints = this.incidents
+      .map(inc => ({
+        lat: Number(inc.latitude),
+        lng: Number(inc.longitude),
+        count: 1,
+      }))
+      .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+
+    return this.aggregateCityCenterPoints(incidentPoints);
+  }
+
+  private aggregateCityCenterPoints(points: HeatmapPoint[]): HeatmapPoint[] {
+    const grouped = new Map<string, { latSum: number; lngSum: number; count: number }>();
+    points.forEach(point => {
+      // 3 decimals is roughly a city-block scale, better for compact areas like Bizerte center.
+      const key = `${point.lat.toFixed(3)},${point.lng.toFixed(3)}`;
+      const existing = grouped.get(key);
+      if (existing) {
+        existing.latSum += point.lat * point.count;
+        existing.lngSum += point.lng * point.count;
+        existing.count += point.count;
+      } else {
+        grouped.set(key, {
+          latSum: point.lat * point.count,
+          lngSum: point.lng * point.count,
+          count: point.count,
+        });
+      }
+    });
+
+    return Array.from(grouped.values())
+      .map(point => ({
+        lat: point.latSum / point.count,
+        lng: point.lngSum / point.count,
+        count: point.count,
+      }));
+  }
+
+  private bringHeatmapForward(): void {
+    const canvas = this.mapEl.nativeElement.querySelector<HTMLCanvasElement>('.leaflet-heatmap-layer');
+    if (canvas) {
+      canvas.style.zIndex = '450';
+      canvas.style.pointerEvents = 'none';
+    }
+  }
+
+  private focusHeatmapIfOffscreen(): void {
+    const points = this.normalizedHeatmapPoints();
+    if (points.length === 0) return;
+
+    const visibleBounds = this.map.getBounds().pad(0.15);
+    const hasVisibleHeat = points.some(p => visibleBounds.contains([p.lat, p.lng]));
+    if (hasVisibleHeat) return;
+
+    const L = (window as any).L;
+    const latLngs: [number, number][] = points.map(p => [p.lat, p.lng]);
+    if (latLngs.length === 1) {
+      this.map.setView(latLngs[0], Math.max(this.map.getZoom(), 14));
+    } else {
+      this.map.fitBounds(L.latLngBounds(latLngs), {
+        padding: [48, 48],
+        maxZoom: 14,
+      });
     }
   }
 
@@ -287,7 +391,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (this.heatmapVisible) {
+      this.focusHeatmapIfOffscreen();
       this.heatLayer.addTo(this.map);
+      this.heatLayer.redraw?.();
+      this.bringHeatmapForward();
     } else {
       this.map.removeLayer(this.heatLayer);
     }

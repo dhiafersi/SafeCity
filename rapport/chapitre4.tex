@@ -5,10 +5,8 @@
 % Organisme d'accueil : HRMAPS
 % ==============================================================================
 
-\chapter{Release 2 : Gestion avancée, rapports et intelligence artificielle}
+\chapter{Gestion avancée, rapports et intelligence artificielle}
 
-\section*{Introduction}
-\addcontentsline{toc}{section}{Introduction}
 Ce quatrième chapitre se consacre à l'exposition de la seconde release (Release 2) de notre projet \textbf{SafeCity-Connect}. Cette phase intègre les fonctionnalités avancées destinées à la planification des interventions techniques, à la modération et au contrôle de conformité des réparations sur le terrain par l'administration, au portail décisionnel analytique, ainsi qu'aux apports de l'Intelligence Artificielle.
 
 Cette release vient compléter l'expérience utilisateur et accroître la performance des équipes de la mairie en automatisant la classification visuelle par le modèle d'apprentissage profond \textbf{YOLOv8}, en fournissant une carte de chaleur (\textbf{Heatmap}) géospatiale, et en déployant un support par tickets d'assistance citoyenne. Nous détaillerons les différents diagrammes UML de conception et d'analyse élaborés, ainsi que les interfaces graphiques développées.
@@ -242,21 +240,21 @@ Les interfaces réelles développées durant ce quatrième sprint sont présent�
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.8 : Interface mobile Flutter du signalement de réparation terrain (Agent)]}\hss}\vfill}}
-    \caption{Interface mobile de soumission de preuve de réparation (Agent)}
+    \includegraphics[width=0.8\linewidth]{submit proof department.png}
+    \caption{Interface de soumission de preuve de réparation (Agent)}
     \label{fig:ui_agent_resolve}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.9 : Interface mobile Flutter de la liste des interventions affectées à l'agent]}\hss}\vfill}}
-    \caption{Interface mobile de consultation des interventions affectées à l'agent}
+    \includegraphics[width=0.8\linewidth]{list incidents to fix department.png}
+    \caption{Interface de consultation des interventions affectées à l'agent}
     \label{fig:ui_agent_list}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.10 : Interface web Angular de modération et d'analyse des photos comparative côte à côte]}\hss}\vfill}}
+    \includegraphics[width=\linewidth]{side by side proof analysing .png}
     \caption{Interface web de modération et d'analyse comparative des photos}
     \label{fig:ui_web_compare}
 \end{figure}
@@ -266,7 +264,7 @@ Afin de valider la robustesse de l'envoi d'images lourdes et de la conteneurisat
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 3.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.11 : Test de téléversement multipart et de rejet de formulaire sans photo preuve]}\hss}\vfill}}
+    \includegraphics[width=\linewidth]{photo is needed for proof pop up.png}
     \caption{Test de téléversement multipart et de rejet sans photo preuve}
     \label{fig:test_agent_form}
 \end{figure}
@@ -495,30 +493,37 @@ Les captures suivantes illustrent les maquettes et interfaces d'affichage finale
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.19 : Interface de notation mobile par étoiles interactives (Citoyen)]}\hss}\vfill}}
+    \includegraphics[width=0.45\linewidth]{rating stars.png}
     \caption{Interface mobile de notation par étoiles interactives (Citoyen)}
     \label{fig:ui_mobile_rating}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.20 : Interface web Angular du tableau de bord de supervision et de suivi des SLAs]}\hss}\vfill}}
+    \includegraphics[width=\linewidth]{Interface web du tableau de bord de supervision et SLAs.png}
     \caption{Interface web du tableau de bord de supervision et SLAs}
     \label{fig:ui_web_dashboard}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.21 : Interface web Angular de la carte thermique (agrégation latitude/longitude)]}\hss}\vfill}}
+    \includegraphics[width=\linewidth]{heatmap.png}
     \caption{Interface web de la carte thermique (agrégation latitude/longitude)}
     \label{fig:ui_web_heatmap}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.22 : Maquette du rapport PDF officiel généré d'une fiche d'incident]}\hss}\vfill}}
+    \includegraphics[width=\linewidth]{one incident pdf.png}
     \caption{Maquette du rapport PDF officiel d'une fiche d'incident}
     \label{fig:ui_pdf_export}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{mounthly report pdf.png}
+    \caption{Maquette du rapport mensuel généré en PDF}
+    \label{fig:ui_pdf_monthly}
 \end{figure}
 
 \subsection{Sprint Review}
@@ -845,17 +850,19 @@ Les captures réelles illustrant nos interfaces et notre passerelle d'Intelligen
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.31 : Interface mobile Flutter de messagerie instantanée d'aide citoyenne Support]}\hss}\vfill}}
-    \caption{Interface du support par tickets d’assistance}
+    \includegraphics[width=0.45\linewidth]{interface support for client.png}
+    \caption{Interface du support par tickets d’assistance (Citoyen)}
     \label{fig:ui_mobile_support_tickets}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 4.32 : Console de débogage et d'affichage des détections YOLOv8 sur image d'anomalie]}\hss}\vfill}}
-    \caption{Interface d’analyse IA}
-    \label{fig:ui_ia_analysis}
+    \includegraphics[width=\linewidth]{interface answer tickets admin.png}
+    \caption{Interface de réponse aux tickets d’assistance (Administrateur)}
+    \label{fig:ui_web_support_admin}
 \end{figure}
+
+
 
 \begin{figure}[H]
     \centering

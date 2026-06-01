@@ -15,8 +15,8 @@ import { ReportService } from '../../../core/services/report.service';
       <div class="page-header">
         <h1>📊 Incident Management</h1>
         <span class="total-badge">{{ totalElements }} total</span>
-        <button class="btn-report" (click)="downloadWeeklyReport()" [disabled]="exportingReport">
-          {{ exportingReport ? 'Preparing PDF...' : 'Weekly PDF' }}
+        <button class="btn-report" (click)="downloadLastMonthReport()" [disabled]="exportingReport">
+          {{ exportingReport ? 'Preparing PDF...' : lastMonthReportLabel }}
         </button>
       </div>
 
@@ -57,6 +57,7 @@ import { ReportService } from '../../../core/services/report.service';
               <th>Delegation</th>
               <th>AI Tag</th>
               <th>Status</th>
+              <th>Rating</th>
               <th>Date</th>
               <th>Actions</th>
             </tr>
@@ -80,6 +81,11 @@ import { ReportService } from '../../../core/services/report.service';
               </td>
               <td>
                 <span class="status-chip" [class]="inc.status.toLowerCase()">{{ inc.status }}</span>
+              </td>
+              <td>
+                <span class="rating-badge-list" *ngIf="inc.citizenRating">⭐ {{ inc.citizenRating }}/5</span>
+                <span class="no-rating-list" *ngIf="!inc.citizenRating && inc.status === 'RESOLVED'">Pending</span>
+                <span class="no-rating-list" *ngIf="inc.status !== 'RESOLVED'">—</span>
               </td>
               <td class="date-cell">{{ inc.createdAt | date:'dd/MM/yy HH:mm' }}</td>
               <td class="actions-cell">
@@ -196,6 +202,9 @@ import { ReportService } from '../../../core/services/report.service';
     .status-chip.fix_submitted { background:rgba(79,195,247,.15); color:#4fc3f7; border:1px solid rgba(79,195,247,.25); }
     .status-chip.resolved  { background:rgba(79,195,247,.15);  color:#4fc3f7; border:1px solid rgba(79,195,247,.25); }
     .status-chip.rejected  { background:rgba(239,83,80,.15);  color:#ef5350; border:1px solid rgba(239,83,80,.25); }
+
+    .rating-badge-list { color: #ffca28; font-weight: 600; }
+    .no-rating-list { color: #555; }
 
     .ai-tag { color:#ce93d8; display:flex; flex-direction:column; font-size:.78rem; }
     .ai-tag small { color:#888; font-size:.7rem; }
@@ -421,25 +430,42 @@ export class IncidentsListComponent implements OnInit {
     });
   }
 
-  downloadWeeklyReport(): void {
+  get lastMonthReportLabel(): string {
+    const { from } = this.previousMonthRange();
+    return `${from.toLocaleString('en', { month: 'long' })} Report PDF`;
+  }
+
+  downloadLastMonthReport(): void {
     this.exportingReport = true;
-    const to = new Date();
-    const from = new Date();
-    from.setDate(to.getDate() - 7);
-    const fromIso = from.toISOString().slice(0, 10);
-    const toIso = to.toISOString().slice(0, 10);
+    const { from, to } = this.previousMonthRange();
+    const fromIso = this.toIsoDate(from);
+    const toIso = this.toIsoDate(to);
 
     this.reportService.downloadPeriodReport(fromIso, toIso).subscribe({
       next: blob => {
-        this.reportService.saveBlob(blob, `safecity-weekly-${fromIso}-${toIso}.pdf`);
+        this.reportService.saveBlob(blob, `safecity-${from.toLocaleString('en', { month: 'long' }).toLowerCase()}-${from.getFullYear()}-report.pdf`);
         this.exportingReport = false;
-        this.showToast('Weekly PDF report downloaded', 'success');
+        this.showToast('Monthly PDF report downloaded', 'success');
       },
       error: () => {
         this.exportingReport = false;
         this.showToast('Failed to export PDF report', 'error');
       }
     });
+  }
+
+  private previousMonthRange(): { from: Date; to: Date } {
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const to = new Date(now.getFullYear(), now.getMonth(), 0);
+    return { from, to };
+  }
+
+  private toIsoDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private showToast(msg: string, type: 'success' | 'error'): void {

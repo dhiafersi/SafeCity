@@ -5,10 +5,8 @@
 % Organisme d'accueil : HRMAPS
 % ==============================================================================
 
-\chapter{Release 1 : Gestion d'accès, profils et sécurité}
+\chapter{Gestion d'accès, profils et sécurité}
 
-\section*{Introduction}
-\addcontentsline{toc}{section}{Introduction}
 Ce chapitre est dédié aux différents sprints qui constituent la première release du projet \textbf{SafeCity-Connect}. Nous y détaillons l'ensemble de la modélisation et de la conception logicielle, notamment à travers les diagrammes de cas d'utilisation, de classes, ainsi que les diagrammes de séquences (système et conception).
 
 En outre, nous illustrerons les choix ergonomiques et les interfaces graphiques développées pour chaque sprint à l'aide de captures d'écrans et de maquettes démonstratives. Ces éléments apportent un éclairage sur les briques d'authentification unique (SSO), les fonctions de contrôle des profils et le module de signalement cartographique interactif mis en œuvre durant cette première phase.
@@ -336,6 +334,7 @@ Afin de représenter l'enchaînement temporel des interactions système, nous av
     \caption{Diagramme de séquence système du cas d'utilisation «S'authentifier»}
     \label{fig:seq_sys_auth}
 \end{figure}
+Ce diagramme de séquence de l'image illustre le processus d'authentification d'un utilisateur auprès du système. Après le clic initial et l'affichage du formulaire, l'utilisateur saisit ses identifiants qui subissent une double vérification conditionnelle. Si les champs sont incomplets, le système rejette la demande avec un message d'erreur, tandis que si les données sont valides, un second filtre vérifie l'exactitude des identifiants pour soit rediriger l'utilisateur vers la page d'accueil, soit lui notifier une erreur de connexion.
 
 \begin{figure}[H]
     \centering
@@ -343,6 +342,7 @@ Afin de représenter l'enchaînement temporel des interactions système, nous av
     \caption{Diagramme de séquence système du cas d’utilisation «S’inscrire»}
     \label{fig:seq_sys_insc}
 \end{figure}
+Ce diagramme de séquence retrace le processus d'inscription d'un citoyen sur le système. Après l'affichage et la saisie du formulaire d'inscription, les données font l'objet d'une double vérification par fragments alternatifs. Si les champs s'avèrent invalides, le système renvoie immédiatement un message d'erreur, tandis que si les informations sont valides, un second test s'assure que l'adresse e-mail n'est pas déjà prise pour soit bloquer l'inscription avec une alerte dédiée, soit valider définitivement la création du compte par un message de confirmation.
 
 \begin{figure}[H]
     \centering
@@ -350,6 +350,7 @@ Afin de représenter l'enchaînement temporel des interactions système, nous av
     \caption{Diagramme de séquence système du cas d’utilisation «Modifier Profil»}
     \label{fig:seq_sys_modif}
 \end{figure}
+Ce diagramme de séquence détaille le processus de modification des données de profil par un utilisateur sur le système. Suite au clic sur le bouton de modification et à l'affichage du formulaire dédié, l'utilisateur soumet ses nouvelles coordonnées, à savoir son numéro de téléphone, son prénom et son nom. Le système évalue ensuite ces entrées via un fragment alternatif afin de retourner un message d'erreur si le format des données s'avère incorrect, ou de valider définitivement les changements par un message de confirmation si les informations saisies sont valides.
 
 \begin{figure}[H]
     \centering
@@ -376,6 +377,7 @@ Les diagrammes de séquence de conception modélisent les interactions précises
     \caption{Diagramme de séquence de conception «S’authentifier»}
     \label{fig:seq_concep_auth}
 \end{figure}
+Ce diagramme de séquence détaille le cycle complet de connexion d'un utilisateur à travers les différentes couches de l'application. Suite à la saisie des identifiants sur l'interface, le système valide d'abord localement la présence des données avant de transmettre la requête au contrôleur d'authentification, qui sollicite à son tour un service utilisateur pour récupérer un jeton d'accès auprès de l'API Keycloak. Le flux se conclut par une structure conditionnelle imbriquée où la réponse du serveur détermine l'issue de la session, renvoyant un succès avec redirection vers l'accueil si les informations sont valides, ou bloquant l'accès avec un code d'erreur et une notification si les identifiants s'avèrent incorrects.
 
 \begin{figure}[H]
     \centering
@@ -383,6 +385,7 @@ Les diagrammes de séquence de conception modélisent les interactions précises
     \caption{Diagramme de séquence de conception «S’inscrire»}
     \label{fig:seq_concep_insc}
 \end{figure}
+Ce diagramme de séquence détaille le processus d'inscription d'un citoyen, dont les données de compte sont entièrement déléguées et stockées dans l'API Keycloak. Suite à la saisie et à la validation des champs sur l'interface, la requête transite par le contrôleur et le service backend qui s'authentifient d'abord auprès de Keycloak pour obtenir un jeton d'administration avant de requérir la création de l'utilisateur. Le traitement se sépare ensuite selon deux fragments alternatifs imbriqués : soit la création réussit, déclenchant l'attribution du rôle de citoyen et le renvoi d'une confirmation positive à l'écran, soit elle échoue en raison d'un e-mail déjà utilisé, ce qui lève une exception et renvoie un message d'erreur approprié à l'utilisateur.
 
 \begin{figure}[H]
     \centering
@@ -390,6 +393,7 @@ Les diagrammes de séquence de conception modélisent les interactions précises
     \caption{Diagramme de séquence de conception «Modifier Profil»}
     \label{fig:seq_concep_modif}
 \end{figure}
+Ce diagramme de séquence détaille le processus d'inscription d'un citoyen, dont les données de compte sont entièrement déléguées et stockées dans l'API Keycloak. Suite à la saisie et à la validation des champs sur l'interface, la requête transite par le contrôleur et le service backend qui s'authentifient d'abord auprès de Keycloak pour obtenir un jeton d'administration avant de requérir la création de l'utilisateur. Le traitement se sépare ensuite selon deux fragments alternatifs imbriqués : soit la création réussit, déclenchant l'attribution du rôle de citoyen et le renvoi d'une confirmation positive à l'écran, soit elle échoue en raison d'un e-mail déjà utilisé, ce qui lève une exception et renvoie un message d'erreur approprié à l'utilisateur.
 
 \begin{figure}[H]
     \centering
@@ -397,27 +401,28 @@ Les diagrammes de séquence de conception modélisent les interactions précises
     \caption{Diagramme de séquence de conception «Activer / Désactiver compte»}
     \label{fig:seq_concep_desac}
 \end{figure}
+Ce diagramme de séquence détaille le processus d'activation ou de désactivation du compte d'un utilisateur par un administrateur. Lorsque l'administrateur clique sur le commutateur de l'interface graphique, celle-ci envoie une requête HTTP de type PATCH au contrôleur dédié à l'administration des utilisateurs. Ce contrôleur backend transmet immédiatement l'instruction au service utilisateur qui communique ensuite directement avec l'API externe de Keycloak. Cet échange avec Keycloak s'effectue en deux temps, d'abord par une lecture synchrone pour récupérer l'état actuel de l'utilisateur sous format JSON, puis par une mise à jour appliquant la nouvelle valeur booléenne du statut. Dès que Keycloak valide la modification par une réponse vide de succès, la confirmation remonte l'ensemble des couches logicielles jusqu'à l'interface graphique qui actualise l'affichage du statut à l'écran.
 
 \subsection{Réalisation}
 Les interfaces suivantes illustrent les écrans réels développés au cours de ce deuxième sprint :
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.12 : Interface d'Authentification Unique Keycloak SSO]}\hss}\vfill}}
+    \includegraphics[width=0.8\linewidth]{Interface d’authentification.png}
     \caption{Interface d’authentification}
     \label{fig:ui_auth}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.13 : Interface d'Inscription Citoyenne mobile Flutter]}\hss}\vfill}}
+    \includegraphics[width=0.8\linewidth]{Interface d’inscription.png}
     \caption{Interface d’inscription}
     \label{fig:ui_insc}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.14 : Interface d'administration et de gestion des comptes d'agents]}\hss}\vfill}}
+    \includegraphics[width=0.8\linewidth]{Interface de gestion des comptes utilisateurs.png}
     \caption{Interface de gestion des comptes utilisateurs}
     \label{fig:ui_gestion_util}
 \end{figure}
@@ -427,7 +432,7 @@ Pour valider la robustesse de notre brique de sécurité, nous avons conduit des
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 3.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.15 : Test de création de compte avec adresse e-mail existante (Rejet d'inscription)]}\hss}\vfill}}
+    \includegraphics[width=0.8\linewidth]{Test d’une adresse e-mail déjà utilisée.png}
     \caption{Test d'une adresse e-mail déjà utilisée}
     \label{fig:test_email_utilise}
 \end{figure}
@@ -772,6 +777,7 @@ Afin de représenter l'enchaînement temporel des interactions système, nous pr
     \caption{Diagramme de séquence système du cas d'utilisation «Consulter les incidents»}
     \label{fig:seq_sys_consulter_inc}
 \end{figure}
+Le diagramme de séquence montre un Utilisateur qui demande au Système d'ouvrir une carte. Le Système répond aussitôt en affichant à l'écran la carte accompagnée de ses marqueurs.
 
 \begin{figure}[H]
     \centering
@@ -779,6 +785,7 @@ Afin de représenter l'enchaînement temporel des interactions système, nous pr
     \caption{Diagramme de séquence système du cas d'utilisation «Signaler un incident»}
     \label{fig:seq_sys_signaler}
 \end{figure}
+Le diagramme de séquence montre un Citoyen qui ouvre un formulaire pour signaler un incident avec une photo et des détails. Le Système gère ensuite la position géographique selon deux cas : soit il détecte automatiquement le GPS s'il est actif, soit il demande au Citoyen de placer manuellement un marqueur sur la carte si le GPS est inactif. Pour finir, le Système effectue une vérification interne des doublons avant d'afficher un message de succès et d'envoyer un e-mail de confirmation au Citoyen.
 
 \begin{figure}[H]
     \centering
@@ -786,6 +793,7 @@ Afin de représenter l'enchaînement temporel des interactions système, nous pr
     \caption{Diagramme de séquence système du cas d'utilisation «Modifier un signalement»}
     \label{fig:seq_sys_modifier}
 \end{figure}
+Le diagramme de séquence montre un Citoyen qui sélectionne un signalement pour en afficher les détails. Le Système gère ensuite la possibilité de modification selon deux cas : si le signalement n'est pas encore validé, le Citoyen peut modifier la description ainsi que la catégorie et reçoit un message de succès, tandis que si le signalement est déjà validé, le Système lui oppose un refus en affichant un message indiquant que l'élément n'est plus modifiable.
 
 \begin{figure}[H]
     \centering
@@ -793,6 +801,7 @@ Afin de représenter l'enchaînement temporel des interactions système, nous pr
     \caption{Diagramme de séquence système du cas d'utilisation «Supprimer un signalement»}
     \label{fig:seq_sys_suppr}
 \end{figure}
+Le diagramme de séquence montre un Administrateur qui sélectionne un incident pour en afficher les détails. L'Administrateur clique ensuite sur le bouton de suppression, ce qui pousse le Système à lui demander une confirmation. Une fois que l'Administrateur valide définitivement la suppression, le Système met à jour son affichage en actualisant la carte.
 
 \begin{figure}[H]
     \centering
@@ -800,6 +809,7 @@ Afin de représenter l'enchaînement temporel des interactions système, nous pr
     \caption{Diagramme de séquence système du cas d'utilisation «Rechercher un incident»}
     \label{fig:seq_sys_recherche}
 \end{figure}
+Le diagramme de séquence montre un Utilisateur qui saisit une recherche par adresse ou mot-clé dans le Système. Le Système gère la réponse selon deux cas : si des résultats sont trouvés, il centre automatiquement la carte sur ces résultats, tandis que si aucun résultat n'est trouvé, il affiche un message indiquant qu'aucun incident n'a été détecté.
 
 \begin{figure}[H]
     \centering
@@ -853,21 +863,28 @@ Les interfaces graphiques suivantes présentent les écrans cartographiques de n
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.28 : Interface web Angular de la liste et carte des incidents (Admin)]}\hss}\vfill}}
-    \caption{Interface web de la liste et carte des incidents (Admin)}
+    \includegraphics[width=0.8\linewidth]{Interface web de carte des incidents (Admin).png}
+    \caption{Interface web de la carte des incidents (Admin)}
     \label{fig:ui_web_incidents}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.29 : Interface mobile Flutter de la carte interactive de signalements]}\hss}\vfill}}
+    \includegraphics[width=0.8\linewidth]{Interface web de la liste des incidents (Admin).png}
+    \caption{Interface web du tableau de bord de gestion des incidents (Admin)}
+    \label{fig:ui_web_incidents_dashboard}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.45\linewidth]{Interface mobile de la carte interactive de signalements.jpg}
     \caption{Interface mobile de la carte interactive de signalements}
     \label{fig:ui_mobile_carte}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 4cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.30 : Interface mobile Flutter de détails d'une fiche d'incident et commentaires]}\hss}\vfill}}
+    \includegraphics[width=0.45\linewidth]{Interface mobile de détails d’une fiche d’incident.jpg}
     \caption{Interface mobile de détails d'une fiche d'incident}
     \label{fig:ui_mobile_details}
 \end{figure}
@@ -877,7 +894,7 @@ Afin de garantir que les contraintes d'intégrité géospatiales et que les form
 
 \begin{figure}[H]
     \centering
-    \framebox[\linewidth]{\vbox to 3.5cm{\vfill\hbox to \textwidth{\hss\textbf{[Figure 3.31 : Test de validation des champs obligatoires et des coordonnées GPS (Rejet d'envoi)]}\hss}\vfill}}
+    \includegraphics[width=\linewidth]{Test de validation des champs obligatoires et des coordonnées GPS.png}
     \caption{Test de validation des champs obligatoires et des coordonnées GPS}
     \label{fig:test_champs_signalement}
 \end{figure}
