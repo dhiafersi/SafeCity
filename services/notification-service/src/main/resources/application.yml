@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: notification-service
+  email-api:
+    provider: ${EMAIL_API_PROVIDER:smtp}
+    api-key: ${EMAIL_API_KEY:}
+    api-url: ${EMAIL_API_URL:https://api.mailgun.net/v3}
+    from-email: ${EMAIL_FROM:no-reply@safecity-connect.local}
+    domain: ${EMAIL_DOMAIN:}
+  mail:
+    host: ${SMTP_HOST:smtp-relay.brevo.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:true}
+          starttls:
+            enable: ${SMTP_STARTTLS:true}
+            required: ${SMTP_STARTTLS:true}
+
+server:
+  port: ${SERVER_PORT:8084}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+safecity:
+  alerts:
+    recipient-email: ${ALERT_RECIPIENT_EMAIL:fersidhia9@gmail.com}
+  portal-url: ${SAFECITY_PORTAL_URL:http://localhost:4200}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  health:
+    mail:
+      enabled: false

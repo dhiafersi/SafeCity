@@ -1,360 +1,383 @@
-# SafeCity-Connect Jury-Ready Runner Script
-# Ensures that the project runs 100% reliably in front of the jury.
+# SafeCity-Connect Jury-Ready Runner
+# One-click deterministic startup for presentation day.
 
 Set-Location $PSScriptRoot
+$host.ui.RawUI.WindowTitle = "SafeCity-Connect Jury Runner"
+$ErrorActionPreference = "Continue"
 
-# Clean up console and set title
-$host.ui.RawUI.WindowTitle = "SafeCity-Connect Runner"
-Clear-Host
+$ProjectPorts = @(5432, 8761, 8080, 8081, 8082, 8083, 8084, 8000, 4200)
+$ProjectContainers = @(
+    "safecity-backend",
+    "safecity-postgres",
+    "safecity-keycloak",
+    "safecity-discovery-server",
+    "safecity-api-gateway",
+    "safecity-incident-service",
+    "safecity-support-service",
+    "safecity-notification-service",
+    "safecity-ai-service",
+    "safecity-frontend"
+)
 
-# Helper to print colored console titles
 function Show-Banner {
+    Clear-Host
     Write-Host "==============================================================" -ForegroundColor Cyan
-    Write-Host "     * * *  SAFECITY-CONNECT - JURY DEMONSTRATION RUNNER  * * *" -ForegroundColor Cyan
+    Write-Host "     * * *  SAFECITY-CONNECT -  RUNNER  * * *" -ForegroundColor Cyan
     Write-Host "==============================================================" -ForegroundColor Cyan
 }
 
-Show-Banner
+function Exit-WithPause($code) {
+    Write-Host "`nPress any key to exit..." -ForegroundColor Yellow
+    try {
+        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    } catch {
+        Start-Sleep -Seconds 5
+    }
+    exit $code
+}
 
-# 1. Check & Copy Environment Variables
-$envFile = Join-Path $PSScriptRoot ".env"
-$envExample = Join-Path $PSScriptRoot ".env.example"
-if (-not (Test-Path $envFile)) {
-    Write-Host "[INFO] .env file not found. Copying .env.example..." -ForegroundColor Yellow
-    if (Test-Path $envExample) {
-        Copy-Item $envExample $envFile
-        Write-Host "[OK] .env created successfully." -ForegroundColor Green
-    } else {
-        Write-Host "[WARNING] .env.example not found. Creating empty .env..." -ForegroundColor Yellow
-        New-Item -Path $envFile -ItemType File > $null
+function Invoke-CommandOrFail($description, $scriptBlock) {
+    Write-Host $description -ForegroundColor Gray
+    & $scriptBlock
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Failed: $description" -ForegroundColor Red
+        Exit-WithPause 1
     }
 }
 
-# 2. Check for Docker CLI
-where.exe docker >$null 2>$null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Docker is not installed or not in your system PATH!" -ForegroundColor Red
-    Write-Host "Please install Docker Desktop (https://www.docker.com/products/docker-desktop) and try again." -ForegroundColor Yellow
-    Write-Host "Press any key to exit..."
-    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-    exit 1
+function Ensure-EnvFile {
+    $envFile = Join-Path $PSScriptRoot ".env"
+    $envExample = Join-Path $PSScriptRoot ".env.example"
+    if (-not (Test-Path $envFile)) {
+        Write-Host "[INFO] .env file not found. Creating it..." -ForegroundColor Yellow
+        if (Test-Path $envExample) {
+            Copy-Item $envExample $envFile
+        } else {
+            New-Item -Path $envFile -ItemType File > $null
+        }
+        Write-Host "[OK] .env is ready." -ForegroundColor Green
+    }
 }
 
-# 3. Check for Docker Daemon (Docker Desktop)
-Write-Host "[DOCKER] Checking if Docker daemon is running..." -ForegroundColor Gray
-& docker info >$null 2>$null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[WARNING] Docker is not running. Attempting to start Docker Desktop..." -ForegroundColor Yellow
-    
+function Ensure-RequiredTools {
+    where.exe docker >$null 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Docker is not installed or not in PATH." -ForegroundColor Red
+        Write-Host "Install Docker Desktop, then run start-dev.bat again." -ForegroundColor Yellow
+        Exit-WithPause 1
+    }
+
+    where.exe mvn >$null 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Maven is not installed or not in PATH." -ForegroundColor Red
+        Write-Host "Install Maven, then run start-dev.bat again." -ForegroundColor Yellow
+        Exit-WithPause 1
+    }
+}
+
+function Ensure-DockerRunning {
+    Write-Host "[DOCKER] Checking Docker Desktop..." -ForegroundColor Gray
+    docker info >$null 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] Docker daemon is active." -ForegroundColor Green
+        return
+    }
+
+    Write-Host "[START] Docker is not running. Starting Docker Desktop..." -ForegroundColor Yellow
     $dockerPaths = @(
         "C:\Program Files\Docker\Docker\Docker Desktop.exe",
         "$env:LOCALAPPDATA\Docker\Docker Desktop.exe"
     )
-    
+
     $launched = $false
     foreach ($path in $dockerPaths) {
         if (Test-Path $path) {
-            Write-Host "[START] Launching Docker Desktop from: $path" -ForegroundColor Gray
-            Start-Process $path
+            Start-Process -FilePath $path
             $launched = $true
             break
         }
     }
-    
+
     if (-not $launched) {
-        Write-Host "[ERROR] Could not find Docker Desktop in standard paths." -ForegroundColor Red
-        Write-Host "Please open Docker Desktop manually, wait for it to start, then run this script again." -ForegroundColor Yellow
-        Write-Host "Press any key to exit..."
-        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-        exit 1
+        Write-Host "[ERROR] Could not find Docker Desktop." -ForegroundColor Red
+        Write-Host "Open Docker Desktop manually, wait for it to start, then run start-dev.bat again." -ForegroundColor Yellow
+        Exit-WithPause 1
     }
-    
-    # Wait for Docker to start (up to 90 seconds)
-    $maxWait = 90
-    $waitInterval = 3
+
+    $maxWaitSeconds = 180
     $elapsed = 0
-    Write-Host "[WAIT] Waiting for Docker to initialize. Please wait..." -ForegroundColor Cyan
-    while ($elapsed -lt $maxWait) {
-        Start-Sleep -Seconds $waitInterval
-        $elapsed += $waitInterval
-        Write-Host -NoNewline "." -ForegroundColor Cyan
-        & docker info >$null 2>$null
+    while ($elapsed -lt $maxWaitSeconds) {
+        Start-Sleep -Seconds 3
+        $elapsed += 3
+        docker info >$null 2>$null
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "`n[OK] Docker daemon is ready!" -ForegroundColor Green
-            break
+            Write-Host "[OK] Docker daemon is ready." -ForegroundColor Green
+            return
         }
+        Write-Host -NoNewline "." -ForegroundColor Cyan
     }
-    
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "`n[ERROR] Docker failed to start in time. Please check Docker Desktop and retry." -ForegroundColor Red
-        Write-Host "Press any key to exit..."
-        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-        exit 1
-    }
-} else {
-    Write-Host "[OK] Docker daemon is active." -ForegroundColor Green
+
+    Write-Host "`n[ERROR] Docker did not become ready in time." -ForegroundColor Red
+    Exit-WithPause 1
 }
 
-# Helper to check if a port is in use on Windows
 function Get-ProcessOccupyingPort($port) {
     $conn = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($conn) {
-        $proc = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue
-        if ($proc) {
-            return [PSCustomObject]@{
-                Port = $port
-                ProcessName = $proc.ProcessName
-                PID = $proc.Id
-            }
-        }
+    if (-not $conn) {
+        return $null
     }
-    return $null
+
+    $proc = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue
+    if (-not $proc) {
+        return $null
+    }
+
+    return [PSCustomObject]@{
+        Port = $port
+        ProcessName = $proc.ProcessName
+        PID = $proc.Id
+    }
 }
 
-# Helper to verify HTTP endpoints safely
-function Check-HttpEndpoint($url) {
-    try {
-        $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
-        if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 300) {
-            return $true
+function Stop-ProjectContainers {
+    Write-Host "[CLEAN] Stopping/removing old SafeCity containers..." -ForegroundColor Gray
+    docker compose down --remove-orphans >$null 2>$null
+
+    foreach ($container in $ProjectContainers) {
+        docker inspect $container >$null 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  - Removing $container" -ForegroundColor DarkGray
+            docker rm -f $container >$null 2>$null
         }
-    } catch {
-        if ($null -ne $_.Exception.Response) {
-            $statusCode = [int]$_.Exception.Response.StatusCode
-            if ($statusCode -ge 200 -and $statusCode -lt 400) {
-                return $true
-            }
+    }
+}
+
+function Stop-ContainerPublishingPort($port) {
+    $containers = docker ps --format "{{.ID}}|{{.Names}}|{{.Ports}}" 2>$null
+    foreach ($line in $containers) {
+        $parts = $line -split "\|", 3
+        if ($parts.Count -lt 3) {
+            continue
+        }
+
+        $id = $parts[0]
+        $name = $parts[1]
+        $ports = $parts[2]
+        if ($ports -match "(:|0\.0\.0\.0:|\[::\]:)$port->") {
+            Write-Host "  - Removing Docker container '$name' from port $port" -ForegroundColor Yellow
+            docker rm -f $id >$null 2>$null
+            return $true
         }
     }
     return $false
 }
 
-# 4. Check if project is already running and healthy
-$containers = @("safecity-postgres", "safecity-keycloak", "safecity-backend", "safecity-ai-service", "safecity-frontend")
-$allRunning = $true
-foreach ($c in $containers) {
-    $state = docker inspect --format='{{.State.Running}}' $c 2>$null
-    if ($state -ne "true") {
-        $allRunning = $false
-        break
+function Release-ProjectPorts {
+    Write-Host "[PORTS] Freeing required ports: $($ProjectPorts -join ', ')" -ForegroundColor Gray
+    $protectedProcessNames = @("System", "Idle", "com.docker.backend", "Docker Desktop", "dockerd", "vpnkit")
+
+    foreach ($port in $ProjectPorts) {
+        $containerStopped = Stop-ContainerPublishingPort $port
+        if ($containerStopped) {
+            Start-Sleep -Milliseconds 500
+        }
+
+        $occupant = Get-ProcessOccupyingPort $port
+        if ($null -eq $occupant) {
+            continue
+        }
+
+        if ($protectedProcessNames -contains $occupant.ProcessName) {
+            Write-Host "  - Port $port is held by protected process '$($occupant.ProcessName)' (PID $($occupant.PID))." -ForegroundColor Red
+            Write-Host "    Close it manually, then run start-dev.bat again." -ForegroundColor Yellow
+            Exit-WithPause 1
+        }
+
+        try {
+            Write-Host "  - Closing '$($occupant.ProcessName)' on port $port (PID $($occupant.PID))" -ForegroundColor Yellow
+            Stop-Process -Id $occupant.PID -Force -ErrorAction Stop
+            Start-Sleep -Milliseconds 700
+        } catch {
+            Write-Host "[ERROR] Could not close PID $($occupant.PID) on port ${port}: $($_.Exception.Message)" -ForegroundColor Red
+            Exit-WithPause 1
+        }
     }
 }
 
-$alreadyFullyHealthy = $false
-if ($allRunning) {
-    # Quick health check
-    $pgHealth = docker inspect --format='{{.State.Health.Status}}' safecity-postgres 2>$null
-    $pgReady = ($pgHealth -eq '"healthy"' -or $pgHealth -eq "healthy")
-    
-    if ($pgReady -and 
-        (Check-HttpEndpoint "http://localhost:4200/") -and 
-        (Check-HttpEndpoint "http://localhost:8080/realms/safecity") -and 
-        (Check-HttpEndpoint "http://localhost:8081/actuator/health") -and 
-        (Check-HttpEndpoint "http://localhost:8000/health")) {
-        $alreadyFullyHealthy = $true
+function Invoke-LocalMavenBuilds {
+    Write-Host "[BUILD] Building Java jars locally using Maven cache..." -ForegroundColor Yellow
+    $modules = @(
+        @{ Name = "Incident/Support Backend"; Path = "backend" },
+        @{ Name = "Eureka Discovery Server"; Path = "services\discovery-server" },
+        @{ Name = "API Gateway"; Path = "services\api-gateway" },
+        @{ Name = "Notification Service"; Path = "services\notification-service" }
+    )
+
+    foreach ($module in $modules) {
+        $modulePath = Join-Path $PSScriptRoot $module.Path
+        Write-Host "  - $($module.Name)" -ForegroundColor Gray
+        Push-Location $modulePath
+        mvn -q -DskipTests package
+        $buildCode = $LASTEXITCODE
+        Pop-Location
+
+        if ($buildCode -ne 0) {
+            Write-Host "[ERROR] Maven build failed for $($module.Name)." -ForegroundColor Red
+            Exit-WithPause 1
+        }
     }
+    Write-Host "[OK] Java jars are ready." -ForegroundColor Green
 }
 
-# Helper to ask user for input with timeout
-function Get-InputWithTimeout($timeoutSeconds, $defaultOption) {
-    $timer = [diagnostics.stopwatch]::StartNew()
-    $selection = $null
-    
-    try {
-        while ($timer.Elapsed.TotalSeconds -lt $timeoutSeconds) {
-            $remaining = [math]::Max(0, [math]::Ceiling($timeoutSeconds - $timer.Elapsed.TotalSeconds))
-            Write-Host -NoNewline "`r[TIME] Auto-selecting Option [$defaultOption] in $remaining seconds... (Choose: 1-4) " -ForegroundColor Cyan
-            
-            if ($Host.UI.RawUI.KeyAvailable) {
-                $key = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-                $selection = $key.Character
-                Write-Host ""
-                break
-            }
-            Start-Sleep -Milliseconds 200
-        }
-        if ($null -eq $selection) {
-            Write-Host ""
-            $selection = $defaultOption
-        }
-    } catch {
-        # Fallback if KeyAvailable is not supported in the hosting shell
-        Write-Host "`n[WARNING] Interactive timer not supported. Selecting option [$defaultOption]." -ForegroundColor Gray
-        $selection = $defaultOption
-    }
-    return $selection
-}
+function Start-ComposeStack {
+    param(
+        [bool]$Rebuild = $true
+    )
 
-$action = "2" # Default action: clean start if not already running
-if ($alreadyFullyHealthy) {
-    Write-Host "`n[OK] SafeCity-Connect is ALREADY fully running and healthy!" -ForegroundColor Green
-    Write-Host "--------------------------------------------------------" -ForegroundColor Gray
-    Write-Host " [1] Keep running & open Frontend in browser (Instant)" -ForegroundColor Green
-    Write-Host " [2] Restart all containers (Clean State)" -ForegroundColor Yellow
-    Write-Host " [3] Force rebuild & restart all containers (Hard Update)" -ForegroundColor Red
-    Write-Host " [4] Stop all containers" -ForegroundColor Yellow
-    Write-Host "--------------------------------------------------------" -ForegroundColor Gray
-    
-    $choice = Get-InputWithTimeout -timeoutSeconds 8 -defaultOption "1"
-    $action = $choice
-} else {
-    Write-Host "`n[INFO] Environment not running or partially active. Starting up..." -ForegroundColor Yellow
-    Write-Host " [1] Start normally (Reuses built images - Fast)" -ForegroundColor Green
-    Write-Host " [2] Force rebuild & start (Compiles source code - Clean)" -ForegroundColor Red
-    Write-Host "--------------------------------------------------------" -ForegroundColor Gray
-    
-    $choice = Get-InputWithTimeout -timeoutSeconds 10 -defaultOption "1"
-    if ($choice -eq "2") {
-        $action = "3" # Rebuild & Restart
-    } else {
-        $action = "2" # Just Start Normally
-    }
-}
-
-if ($action -eq "1") {
-    # Keep running, just jump to final screen
-    Write-Host "[START] Keeping current containers active..." -ForegroundColor Green
-    Start-Sleep -Seconds 1
-} elseif ($action -eq "4") {
-    # Stop containers
-    Write-Host "[STOP] Shutting down environment..." -ForegroundColor Yellow
-    docker compose down
-    Write-Host "[OK] SafeCity-Connect is stopped." -ForegroundColor Green
-    Write-Host "Press any key to exit..."
-    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-    exit 0
-} else {
-    # Action 2 (Restart/Start) or 3 (Rebuild)
-    Write-Host "[STOP] Stopping any partially running containers first..." -ForegroundColor Gray
-    docker compose down
-    
-    # Check for port conflicts before binding
-    Write-Host "[INFO] Verifying ports are available (5432, 8080, 8081, 8000, 4200)..." -ForegroundColor Gray
-    $portsToCheck = @(5432, 8080, 8081, 8000, 4200)
-    $conflicts = @()
-    foreach ($p in $portsToCheck) {
-        $occupant = Get-ProcessOccupyingPort $p
-        if ($null -ne $occupant) {
-            $conflicts += $occupant
-        }
-    }
-    
-    if ($conflicts.Count -gt 0) {
-        Write-Host "[WARNING] Port conflicts detected! Docker cannot bind to these ports:" -ForegroundColor Red
-        foreach ($c in $conflicts) {
-            Write-Host "  - Port $($c.Port) is occupied by '$($c.ProcessName)' (PID: $($c.PID))" -ForegroundColor Red
-        }
-        Write-Host "Please stop the local applications/services occupying these ports, then try again." -ForegroundColor Yellow
-        Write-Host "Press any key to exit..."
-        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-        exit 1
-    }
-    
-    Write-Host "[START] Booting up SafeCity environment..." -ForegroundColor Green
-    if ($action -eq "3") {
-        Write-Host "[BUILD] Rebuilding container images from source..." -ForegroundColor Yellow
+    if ($Rebuild) {
+        Write-Host "[START] Building lightweight Docker images and starting the stack..." -ForegroundColor Yellow
         docker compose up -d --build --remove-orphans --force-recreate
     } else {
-        Write-Host "[START] Reusing existing images..." -ForegroundColor Gray
+        Write-Host "[START] Starting the stack using the last build..." -ForegroundColor Yellow
         docker compose up -d --remove-orphans
     }
-    
+
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] docker compose up failed. Please inspect the logs above." -ForegroundColor Red
-        Write-Host "Press any key to exit..."
-        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-        exit 1
+        Write-Host "[ERROR] docker compose up failed." -ForegroundColor Red
+        docker compose logs --tail=80
+        Exit-WithPause 1
     }
-    
-    # Setup status structures for health check polling
-    $services = @(
-        @{ Name = "PostgreSQL (PostGIS)"; Status = "Starting"; Check = { 
+}
+
+function Select-StartupMode {
+    Write-Host ""
+    Write-Host "Choose startup mode:" -ForegroundColor Cyan
+    Write-Host "  [F] Fast start (reuse last build)" -ForegroundColor Gray
+    Write-Host "  [R] Rebuild (Maven + Docker build)" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "Press F or R..." -ForegroundColor Yellow
+
+    try {
+        $choice = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown").Character
+    } catch {
+        return "R"
+    }
+
+    if ($choice -eq "f" -or $choice -eq "F") { return "F" }
+    return "R"
+}
+
+function Test-HttpEndpoint($url) {
+    try {
+        $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 8 -ErrorAction Stop
+        return ($response.StatusCode -ge 200 -and $response.StatusCode -lt 400)
+    } catch {
+        return $false
+    }
+}
+
+function Wait-ForStack {
+    $checks = @(
+        @{ Name = "PostgreSQL"; Url = ""; Check = { 
             $h = docker inspect --format='{{.State.Health.Status}}' safecity-postgres 2>$null
             return ($h -eq "healthy" -or $h -eq '"healthy"')
         }},
-        @{ Name = "Keycloak Realm Server"; Status = "Starting"; Check = { 
-            return (Check-HttpEndpoint "http://localhost:8080/realms/safecity")
-        }},
-        @{ Name = "Spring Boot Backend API"; Status = "Starting"; Check = { 
-            return (Check-HttpEndpoint "http://localhost:8081/actuator/health")
-        }},
-        @{ Name = "AI YOLO Microservice"; Status = "Starting"; Check = { 
-            return (Check-HttpEndpoint "http://localhost:8000/health")
-        }},
-        @{ Name = "Angular Frontend Nginx"; Status = "Starting"; Check = { 
-            return (Check-HttpEndpoint "http://localhost:4200/")
-        }}
+        @{ Name = "Keycloak Realm"; Url = "http://localhost:8080/realms/safecity"; Check = { Test-HttpEndpoint "http://localhost:8080/realms/safecity" }},
+        @{ Name = "Eureka Discovery"; Url = "http://localhost:8761"; Check = { Test-HttpEndpoint "http://localhost:8761" }},
+        @{ Name = "API Gateway"; Url = "http://localhost:8081/actuator/health"; Check = { Test-HttpEndpoint "http://localhost:8081/actuator/health" }},
+        @{ Name = "Incident Service"; Url = "http://localhost:8082/actuator/health"; Check = { Test-HttpEndpoint "http://localhost:8082/actuator/health" }},
+        @{ Name = "Support Service"; Url = "http://localhost:8083/actuator/health"; Check = { Test-HttpEndpoint "http://localhost:8083/actuator/health" }},
+        @{ Name = "Notification Service"; Url = "http://localhost:8084/actuator/health"; Check = { Test-HttpEndpoint "http://localhost:8084/actuator/health" }},
+        @{ Name = "AI Service"; Url = "http://localhost:8000/health"; Check = { Test-HttpEndpoint "http://localhost:8000/health" }},
+        @{ Name = "Frontend"; Url = "http://localhost:4200/"; Check = { Test-HttpEndpoint "http://localhost:4200/" }},
+        @{ Name = "Gateway Public API"; Url = "http://localhost:8081/api/public/incidents"; Check = { Test-HttpEndpoint "http://localhost:8081/api/public/incidents" }}
     )
-    
-    $maxAttempts = 50 # 50 * 3 seconds = 150 seconds max wait
-    $attempt = 0
-    $allReady = $false
-    
-    while ($attempt -lt $maxAttempts -and -not $allReady) {
-        $allReady = $true
-        Clear-Host
+
+    $maxAttempts = 70
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
         Show-Banner
-        
-        Write-Host "[WAIT] Initializing application services (Attempt $($attempt+1)/$maxAttempts):" -ForegroundColor Cyan
+        Write-Host "[WAIT] Verifying stack health (Attempt $attempt/$maxAttempts)" -ForegroundColor Cyan
         Write-Host "--------------------------------------------------------------" -ForegroundColor Gray
-        
-        foreach ($s in $services) {
-            if ($s.Status -eq "Ready") {
-                Write-Host " [OK] $($s.Name) is ONLINE" -ForegroundColor Green
+
+        $allReady = $true
+        foreach ($check in $checks) {
+            $ready = & $check.Check
+            if ($ready) {
+                Write-Host " [OK] $($check.Name)" -ForegroundColor Green
             } else {
-                $ready = & $s.Check
-                if ($ready) {
-                    $s.Status = "Ready"
-                    Write-Host " [OK] $($s.Name) is ONLINE" -ForegroundColor Green
-                } else {
-                    $allReady = $false
-                    Write-Host " [WAIT] $($s.Name) is starting..." -ForegroundColor Yellow
-                }
+                $allReady = $false
+                Write-Host " [WAIT] $($check.Name)" -ForegroundColor Yellow
             }
         }
         Write-Host "--------------------------------------------------------------" -ForegroundColor Gray
-        
+
         if ($allReady) {
-            break
+            return
         }
-        
-        Start-Sleep -Seconds 3
-        $attempt++
-    }
-    
-    if (-not $allReady) {
-        Write-Host "`n[WARNING] Some services are taking longer than expected to report healthy." -ForegroundColor Yellow
-        Write-Host "The application might still be loading. Let's proceed." -ForegroundColor Gray
+
         Start-Sleep -Seconds 3
     }
+
+    Write-Host "`n[ERROR] Stack did not become healthy in time." -ForegroundColor Red
+    docker compose ps
+    Write-Host "`n[INFO] Main service logs:" -ForegroundColor Yellow
+    docker compose logs --tail=100 api-gateway incident-service support-service notification-service discovery-server keycloak
+    Exit-WithPause 1
 }
 
-# 5. Final Jury-Ready Summary Screen
-Clear-Host
-Write-Host "==============================================================" -ForegroundColor Green
-Write-Host "         *** SAFECITY-CONNECT IS 100% READY FOR JURY! ***" -ForegroundColor Green
-Write-Host "==============================================================" -ForegroundColor Green
-Write-Host "Frontend Portal:   " -NoNewline; Write-Host "http://localhost:4200" -ForegroundColor Cyan
-Write-Host "Keycloak Console:  " -NoNewline; Write-Host "http://localhost:8080" -ForegroundColor Cyan
-Write-Host "Backend REST API:  " -NoNewline; Write-Host "http://localhost:8081/swagger-ui/index.html" -ForegroundColor Cyan
-Write-Host "AI Microservice:   " -NoNewline; Write-Host "http://localhost:8000/docs" -ForegroundColor Cyan
-Write-Host "--------------------------------------------------------------" -ForegroundColor Gray
-Write-Host "[INFO] JURY TEST ACCOUNTS:" -ForegroundColor Yellow
-Write-Host "  Role: CITIZEN     | Username: " -NoNewline; Write-Host "citizen1" -ForegroundColor Green; Write-Host "  | Password: " -NoNewline; Write-Host "citizen123" -ForegroundColor Green
-Write-Host "  Role: ADMIN       | Username: " -NoNewline; Write-Host "admin1" -ForegroundColor Green; Write-Host "    | Password: " -NoNewline; Write-Host "admin123" -ForegroundColor Green
-Write-Host "  Role: DEPT (Roads)| Username: " -NoNewline; Write-Host "roads1" -ForegroundColor Green; Write-Host "    | Password: " -NoNewline; Write-Host "roads123" -ForegroundColor Green
-Write-Host "==============================================================" -ForegroundColor Green
+function Show-ReadyScreen {
+    Clear-Host
+    Write-Host "==============================================================" -ForegroundColor Green
+    Write-Host "         *** SAFECITY-CONNECT IS 100% READY FOR JURY! ***" -ForegroundColor Green
+    Write-Host "==============================================================" -ForegroundColor Green
+    Write-Host "Frontend Portal:   " -NoNewline; Write-Host "http://localhost:4200" -ForegroundColor Cyan
+    Write-Host "Keycloak Console:  " -NoNewline; Write-Host "http://localhost:8080" -ForegroundColor Cyan
+    Write-Host "Eureka Dashboard:  " -NoNewline; Write-Host "http://localhost:8761" -ForegroundColor Cyan
+    Write-Host "API Gateway:       " -NoNewline; Write-Host "http://localhost:8081/actuator/health" -ForegroundColor Cyan
+    Write-Host "Public API Smoke:  " -NoNewline; Write-Host "http://localhost:8081/api/public/incidents" -ForegroundColor Cyan
+    Write-Host "Incident Service:  " -NoNewline; Write-Host "http://localhost:8082/actuator/health" -ForegroundColor Cyan
+    Write-Host "Support Service:   " -NoNewline; Write-Host "http://localhost:8083/actuator/health" -ForegroundColor Cyan
+    Write-Host "Notification Svc:  " -NoNewline; Write-Host "http://localhost:8084/actuator/health" -ForegroundColor Cyan
+    Write-Host "AI Microservice:   " -NoNewline; Write-Host "http://localhost:8000/docs" -ForegroundColor Cyan
+    Write-Host "--------------------------------------------------------------" -ForegroundColor Gray
+    Write-Host "[INFO] JURY TEST ACCOUNTS:" -ForegroundColor Yellow
+    Write-Host "  Role: CITIZEN      | Username: " -NoNewline; Write-Host "citizen1" -ForegroundColor Green; Write-Host " | Password: " -NoNewline; Write-Host "citizen123" -ForegroundColor Green
+    Write-Host "  Role: ADMIN        | Username: " -NoNewline; Write-Host "admin1" -ForegroundColor Green; Write-Host "   | Password: " -NoNewline; Write-Host "admin123" -ForegroundColor Green
+    Write-Host "  Role: DEPT (Roads) | Username: " -NoNewline; Write-Host "roads1" -ForegroundColor Green; Write-Host "   | Password: " -NoNewline; Write-Host "roads123" -ForegroundColor Green
+    Write-Host "==============================================================" -ForegroundColor Green
+}
 
-# Automatically open frontend in default browser
-Write-Host "[START] Launching Frontend in your default browser..." -ForegroundColor Gray
+Show-Banner
+Ensure-EnvFile
+Ensure-RequiredTools
+Ensure-DockerRunning
+
+$startupMode = Select-StartupMode
+
+if ($startupMode -eq "R") {
+    Stop-ProjectContainers
+    Release-ProjectPorts
+    Invoke-LocalMavenBuilds
+    Start-ComposeStack -Rebuild $true
+} else {
+    Start-ComposeStack -Rebuild $false
+}
+
+Wait-ForStack
+Show-ReadyScreen
+
+Write-Host "[START] Launching Frontend, Keycloak and Eureka in your default browser..." -ForegroundColor Gray
 Start-Process "http://localhost:4200"
+Start-Process "http://localhost:8080"
+Start-Process "http://localhost:8761"
 
 Write-Host "`nPress [L] to stream container logs, or any other key to exit." -ForegroundColor Yellow
-$endChoice = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-if ($endChoice.Character -eq "l" -or $endChoice.Character -eq "L") {
-    Write-Host "`n[LOGS] Streaming live docker-compose logs (Press Ctrl+C to stop)..." -ForegroundColor Cyan
-    docker compose logs -f
-} else {
-    Write-Host "`n*** Have a great presentation! ***" -ForegroundColor Green
-    Start-Sleep -Seconds 2
+try {
+    $endChoice = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    if ($endChoice.Character -eq "l" -or $endChoice.Character -eq "L") {
+        Write-Host "`n[LOGS] Streaming live docker-compose logs. Press Ctrl+C to stop." -ForegroundColor Cyan
+        docker compose logs -f
+    }
+} catch {
+    Start-Sleep -Seconds 5
 }
