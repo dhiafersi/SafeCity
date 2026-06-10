@@ -21,6 +21,13 @@ public class DuplicateDetectionService {
 
     private final IncidentRepository incidentRepository;
 
+    /**
+     * VÉRIFICATION DES DOUBLONS (FLUX INTERACTIF FRONTEND)
+     * 1. Calcule la date limite d'ancienneté (7 jours par défaut).
+     * 2. Appelle le repository pour chercher les incidents similaires à proximité (delta de 0.0045 soit ~500m).
+     * 3. Limite le résultat à 5 correspondances et les convertit en DTO légers.
+     * 4. Renvoie le statut possibleDuplicate à true si au moins une correspondance est trouvée.
+     */
     @Transactional(readOnly = true)
     public DuplicateCheckResponse check(double lat, double lng, IncidentCategory category) {
         LocalDateTime since = LocalDateTime.now().minusDays(DUPLICATE_WINDOW_DAYS);
@@ -37,6 +44,11 @@ public class DuplicateDetectionService {
             .build();
     }
 
+    /**
+     * DÉTECTION DU PREMIER DOUBLON (LORS DU SIGNALEMENT)
+     * Cherche s'il existe déjà un incident similaire lors de la création d'un signalement,
+     * et retourne l'ID du premier doublon trouvé pour pouvoir lier l'incident.
+     */
     @Transactional(readOnly = true)
     public Long findFirstDuplicateId(double lat, double lng, IncidentCategory category) {
         LocalDateTime since = LocalDateTime.now().minusDays(DUPLICATE_WINDOW_DAYS);
@@ -47,6 +59,9 @@ public class DuplicateDetectionService {
             .orElse(null);
     }
 
+    /**
+     * CONVERSION INTERNE EN DTO BRÈVE
+     */
     private IncidentResponse toBriefResponse(Incident i) {
         return IncidentResponse.builder()
             .id(i.getId())

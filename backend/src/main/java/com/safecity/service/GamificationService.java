@@ -25,6 +25,12 @@ public class GamificationService {
 
     private final CitizenPointsRepository citizenPointsRepository;
 
+    /**
+     * ATTRIBUTION DE POINTS DE CITOYENNETÉ (GAMIFICATION)
+     * Récupère le profil de points de l'utilisateur par son ID Keycloak.
+     * S'il n'existe pas, crée un nouveau profil avec 0 point.
+     * Ajoute ensuite 10 points (VALIDATION_POINTS) et met à jour la date de modification.
+     */
     @Transactional
     public void awardValidationPoints(String citizenKeycloakId, String citizenUsername, Long incidentId) {
         CitizenPoints points = citizenPointsRepository
@@ -35,7 +41,7 @@ public class GamificationService {
                 .totalPoints(0)
                 .build());
 
-        points.setCitizenUsername(citizenUsername); // keep fresh
+        points.setCitizenUsername(citizenUsername); // Maintient le nom d'utilisateur à jour
         points.setTotalPoints(points.getTotalPoints() + VALIDATION_POINTS);
         points.setUpdatedAt(LocalDateTime.now());
 
@@ -43,6 +49,10 @@ public class GamificationService {
         log.info("Awarded {} points to citizen={} for incident={}", VALIDATION_POINTS, citizenUsername, incidentId);
     }
 
+    /**
+     * RÉCUPÉRATION DU SCORE D'UN CITOYEN
+     * Retourne le score actuel de l'utilisateur ou 0 s'il n'a pas encore de points en base.
+     */
     @Transactional(readOnly = true)
     public CitizenPointsResponse getPoints(String citizenKeycloakId) {
         CitizenPoints points = citizenPointsRepository
@@ -59,6 +69,10 @@ public class GamificationService {
             .build();
     }
 
+    /**
+     * RÉCUPÉRATION DU CLASSEMENT (LEADERBOARD)
+     * Récupère les 10 meilleurs contributeurs et les trie par ordre décroissant de points.
+     */
     @Transactional(readOnly = true)
     public List<CitizenPointsResponse> getTopContributors(int limit) {
         return citizenPointsRepository.findTop10ByOrderByTotalPointsDesc()
